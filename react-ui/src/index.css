@@ -3,3 +3,20 @@ body {
   padding: 0;
   font-family: sans-serif;
 }
+
+.clearfix::after {
+  content: "";
+  clear: both;
+  display: table;
+}
+
+.title-text {
+  display: block;
+  margin-top: 52px;
+  margin-left: -4px;
+  transform: rotate(-90deg);
+  text-transform: uppercase;
+  font-weight: 700 !important;
+  font-size: 16px;
+  letter-spacing: 3px;
+}

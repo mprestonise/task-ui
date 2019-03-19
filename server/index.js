@@ -1,9 +1,18 @@
-const express = require('express');
-const path = require('path');
-const cluster = require('cluster');
-const numCPUs = require('os').cpus().length;
+require('dotenv').config()
 
-const PORT = process.env.PORT || 5000;
+const express = require('express')
+const path = require('path')
+const bodyParser = require('body-parser')
+const MongoClient = require('mongodb').MongoClient;
+const ObjectId = require('mongodb').ObjectID;
+const moment = require('moment');
+const cluster = require('cluster')
+const numCPUs = require('os').cpus().length
+
+const PORT = process.env.PORT || 5000
+
+const mongoURL = process.env.MONGODB_URI
+const dbName = process.env.MONGODB_NAME
 
 // Multi-process to utilize all CPU cores.
 if (cluster.isMaster) {
@@ -24,10 +33,33 @@ if (cluster.isMaster) {
   // Priority serve any static files.
   app.use(express.static(path.resolve(__dirname, '../react-ui/build')));
 
+  app.use(bodyParser.json({limit: '50mb'}));
+  app.use(bodyParser.urlencoded({ extended: true, limit: '50mb'}));
+
   // Answer API requests.
   app.get('/api', function (req, res) {
     res.set('Content-Type', 'application/json');
     res.send('{"message":"Hello from the custom server!"}');
+  });
+
+  app.get('/api/tasks', function (req, res) {
+    res.set('Content-Type', 'application/json');
+    // connect to Mongo
+    MongoClient.connect(mongoURL, { useNewUrlParser: true }, function(err, client) {
+
+      // check for errors
+      if (!err) {}
+
+      // get db cursor
+      const db = client.db(dbName);
+      const tasks = db.collection('tasks');
+
+      tasks.find().toArray(function(err, items) {
+        if(err) { reject(err) } else {
+          res.json(items);
+        }
+      })
+    })
   });
 
   // All remaining requests return the React app, so it can handle routing.

@@ -6,6 +6,8 @@
     "react-scripts": "^1.1.4"
   },
   "dependencies": {
+    "evergreen-ui": "^4.14.0",
+    "moment": "^2.24.0",
     "react": "^16.4.1",
     "react-dom": "^16.4.1"
   },
