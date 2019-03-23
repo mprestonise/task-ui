@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import update from 'immutability-helper'
-import { Pane, Avatar, Text, Button, Icon, Tooltip, Position } from 'evergreen-ui'
+import { Pane, Avatar, Text, Button, Icon, Tooltip, Position, toaster} from 'evergreen-ui'
 import Progress from './Progress'
 import TaskCard from './TaskCard'
 import Task from './Task'
@@ -14,11 +14,13 @@ class App extends Component {
       selectedTask: null,
       selectedTeam: null,
       fetching: true,
-      canCreateNewTask: true
+      canCreateNewTask: true,
+      overallProgress: 0
     };
   }
 
   componentDidMount() {
+    toaster.notify('Loading tasks..')
     fetch('/api/tasks')
       .then(response => {
         if (!response.ok) {
@@ -27,6 +29,8 @@ class App extends Component {
         return response.json();
       })
       .then(json => {
+        toaster.closeAll()
+        this._calculateProgress(json)
         this.setState({
           tasks: json,
           fetching: false
@@ -38,7 +42,26 @@ class App extends Component {
       })
   }
 
+  _calculateProgress = (tasks) => {
+    let totalCompleted = 0,
+        totalSubtasks = 0
+    tasks.map((task) => {
+      if(task.status === 'Started'){
+        totalSubtasks = totalSubtasks + task.subtasks.length
+        task.subtasks.map(subtask => {
+          if(subtask.completed) totalCompleted++
+          return null
+        })
+      }
+      return null
+    })
+    this.setState({
+      overallProgress: ((totalCompleted / totalSubtasks)*100).toFixed(0)
+    })
+  }
+
   _createNewTask = () => {
+    toaster.notify('Creating new task..', { id: 'createNewTask' })
     this.setState({ canCreateNewTask: false, fetching: true })
     fetch('/api/task/new', {
       method: 'POST',
@@ -51,6 +74,8 @@ class App extends Component {
         return response.json();
       })
       .then(json => {
+        toaster.success('New task created successfully', { id: 'createNewTask' })
+        this._calculateProgress(json)
         this.setState({
           tasks: json,
           canCreateNewTask: true,
@@ -65,6 +90,7 @@ class App extends Component {
   }
 
   _deleteTask = (id) => {
+    toaster.danger('Deleting task..', { id: 'deleteNewTask' })
     fetch(`/api/task/${id}/archive`, {
       method: 'POST',
       headers: { 'Content-Type' : 'application/json' }
@@ -76,6 +102,8 @@ class App extends Component {
         return response.json();
       })
       .then(json => {
+        toaster.success('Task deleted', { id: 'deleteNewTask' })
+        this._calculateProgress(json)
         this.setState({
           tasks: json,
           fetching: false
@@ -89,13 +117,40 @@ class App extends Component {
 
   _selectTask = (index) => { this.setState({ selectedTask: index }) }
 
-  _toggleSubtask = (taskIndex, value, index) => {
+  _toggleSubtask = (taskIndex, value, index, taskId) => {
+    toaster.notify('Updating task..', { id: 'updatingTask' })
     this.setState({
       tasks: update(this.state.tasks, { [taskIndex]: { subtasks: { [index]: { completed: { $set: value } } } } })
     })
+    window.setTimeout(() => {
+      fetch(`/api/task/${taskId}/updateSubtasks`, {
+        method: 'POST',
+        headers: { 'Content-Type' : 'application/json' },
+        body: JSON.stringify({ subtasks: this.state.tasks[taskIndex].subtasks })
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`status ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(json => {
+          toaster.success('Task updated', { id: 'updatingTask' })
+          this._calculateProgress(json)
+          this.setState({
+            tasks: json,
+            fetching: false
+          });
+        }).catch(e => {
+          this.setState({
+            fetching: false
+          });
+        })
+    }, 500)
   }
 
   _changeDueDate = (taskIndex, date, taskId) => {
+    toaster.notify('Updating task..', { id: 'updatingTask' })
     this.setState({
       tasks: update(this.state.tasks, { [taskIndex]: { due_date: { $set: date } } })
     })
@@ -111,6 +166,7 @@ class App extends Component {
         return response.json();
       })
       .then(json => {
+        toaster.success('Task updated', { id: 'updatingTask' })
         this.setState({
           tasks: json,
           fetching: false
@@ -123,6 +179,7 @@ class App extends Component {
   }
 
   _changeName = (taskIndex, name, taskId) => {
+    toaster.notify('Updating task..', { id: 'updatingTask' })
     this.setState({
       tasks: update(this.state.tasks, { [taskIndex]: { name: { $set: name } } })
     })
@@ -138,6 +195,7 @@ class App extends Component {
         return response.json();
       })
       .then(json => {
+        toaster.success('Task updated', { id: 'updatingTask' })
         this.setState({
           tasks: json,
           fetching: false
@@ -150,6 +208,7 @@ class App extends Component {
   }
 
   _changeDesc = (taskIndex, desc, taskId) => {
+    toaster.notify('Updating task..', { id: 'updatingTask' })
     this.setState({
       tasks: update(this.state.tasks, { [taskIndex]: { desc: { $set: desc } } })
     })
@@ -165,6 +224,49 @@ class App extends Component {
         return response.json();
       })
       .then(json => {
+        toaster.success('Task updated', { id: 'updatingTask' })
+        this.setState({
+          tasks: json,
+          fetching: false
+        });
+      }).catch(e => {
+        this.setState({
+          fetching: false
+        });
+      })
+  }
+
+  _newSubtask = (taskIndex) => {
+    const newSubtask = {
+      completed: false,
+      content: "New subtask",
+      added: new Date()
+    }
+    this.setState({
+      tasks: update(this.state.tasks, { [taskIndex]: { subtasks: { $push: [newSubtask] } } })
+    })
+  }
+
+  _updateSubtask = (taskIndex, subTaskIndex, newSubtask, taskId) => {
+    toaster.notify('Updating task..', { id: 'updatingTask' })
+    let newSubtasksArr = update(this.state.tasks[taskIndex], { subtasks: { [subTaskIndex]: { content: { $set: newSubtask } } } } )
+    this.setState({
+      tasks: update(this.state.tasks, { [taskIndex]: { subtasks: { $set: [newSubtasksArr.subtasks] } } })
+    })
+    fetch(`/api/task/${taskId}/updateSubtasks`, {
+      method: 'POST',
+      headers: { 'Content-Type' : 'application/json' },
+      body: JSON.stringify({ subtasks: newSubtasksArr.subtasks })
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`status ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(json => {
+        toaster.success('Task updated', { id: 'updatingTask' })
+        this._calculateProgress(json)
         this.setState({
           tasks: json,
           fetching: false
@@ -177,6 +279,7 @@ class App extends Component {
   }
 
   _selectTeam = (taskIndex, value, taskId) => {
+    toaster.notify('Updating task..', { id: 'updatingTask' })
     this.setState({
       tasks: update(this.state.tasks, { [taskIndex]: { team: { $set: value } } })
     })
@@ -192,6 +295,7 @@ class App extends Component {
         return response.json();
       })
       .then(json => {
+        toaster.success('Task updated', { id: 'updatingTask' })
         this.setState({
           tasks: json,
           fetching: false
@@ -204,6 +308,7 @@ class App extends Component {
   }
 
   _cancelTask = (taskIndex, taskId) => {
+    toaster.warning('Cancelling task..', { id: 'updatingTask' })
     this.setState({
       tasks: update(this.state.tasks, { [taskIndex]: { status: { $set: 'Cancelled' }, updated: { $set: new Date() }, cancelled_date: { $set: new Date() } } })
     })
@@ -218,6 +323,7 @@ class App extends Component {
         return response.json();
       })
       .then(json => {
+        toaster.success('Task cancelled', { id: 'updatingTask' })
         this.setState({
           tasks: json,
           fetching: false
@@ -230,10 +336,11 @@ class App extends Component {
   }
 
   _completeTask = (taskIndex, taskId) => {
+    toaster.notify('Yay!! Saving task..', { id: 'updatingTask' })
     this.setState({
       tasks: update(this.state.tasks, { [taskIndex]: { status: { $set: 'Completed' }, updated: { $set: new Date() }, completed: { $set: true }, completed_date: { $set: new Date() } } })
     })
-    fetch(`/api/task/${taskId}/cancelled`, {
+    fetch(`/api/task/${taskId}/completed`, {
       method: 'POST',
       headers: { 'Content-Type' : 'application/json' }
     })
@@ -244,6 +351,7 @@ class App extends Component {
         return response.json();
       })
       .then(json => {
+        toaster.success('Task completed! Good job!!', { id: 'updatingTask' })
         this.setState({
           tasks: json,
           fetching: false
@@ -338,10 +446,7 @@ class App extends Component {
           </Pane>
 
           <Pane position="absolute" bottom={24}>
-            {/* TODO
-            /// Get all 'started' tasks -> get the count of completed subtasks
-            /// divide it by the total count of subtasks */}
-            <Progress percent={(5 / 24)*100} />
+            <Progress percent={this.state.overallProgress} />
           </Pane>
         </Pane>
 
@@ -377,6 +482,8 @@ class App extends Component {
               changeDesc={this._changeDesc}
               selectTeam={this._selectTeam}
               changeDueDate={this._changeDueDate}
+              newSubtask={this._newSubtask}
+              updateSubtask={this._updateSubtask}
               cancelTask={this._cancelTask}
               completeTask={this._completeTask}
               delete={this._deleteTask} />

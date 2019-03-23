@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import moment from 'moment'
-import { Pane, Heading, Text, TextInput, Textarea, Strong, Select, IconButton, Button } from 'evergreen-ui'
+import { Pane, Heading, Text, TextInput, Textarea, Strong, Select, IconButton, Button, Tooltip, Position } from 'evergreen-ui'
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import Progress from '../Progress'
@@ -16,6 +16,8 @@ class Task extends Component {
       editingDesc: false,
       newDesc: null,
       editingSubtask: false,
+      addingNewSubtask: false,
+      newSubtask: null
     }
   }
 
@@ -106,18 +108,21 @@ class Task extends Component {
           : <Text onClick={() => this.setState({ editingDesc: true })}>{this.props.task.desc}</Text>
         }
 
-        <Pane marginTop={24}>
-          <Text display="block" marginBottom={8} className="caps-label">Team</Text>
-          <Select disabled={this.props.task.completed || this.props.task.status === 'Cancelled'} value={this.props.task.team} onChange={(e) => this.props.selectTeam(this.props.taskIndex, e.target.value, this.props.task._id)}>
-            <option value="Bear team">Bear team</option>
-            <option value="Camel team">Camel team</option>
-            <option value="Design">Design</option>
-          </Select>
+        <Pane marginTop={40} display="flex">
+          <Pane>
+            <Text display="block" marginBottom={4} className="caps-label">Team</Text>
+            <Select disabled={this.props.task.completed || this.props.task.status === 'Cancelled'} value={this.props.task.team} onChange={(e) => this.props.selectTeam(this.props.taskIndex, e.target.value, this.props.task._id)}>
+              <option value="Bear team">Bear team</option>
+              <option value="Camel team">Camel team</option>
+              <option value="Design">Design</option>
+            </Select>
+          </Pane>
+
+          <Pane marginLeft={32}>
+            <Progress percent={((completed / total)*100).toFixed(0)} />
+          </Pane>
         </Pane>
 
-        <Pane marginTop={24}>
-          <Progress percent={(completed / total)*100} />
-        </Pane>
 
         <Pane display="flex" marginTop={32}>
           <Button disabled={this.props.task.completed || this.props.task.status === 'Cancelled'} iconBefore="tick" appearance="primary" intent="success" onClick={() => this.props.completeTask(this.props.taskIndex, this.props.task._id)}>Complete</Button>
@@ -126,9 +131,28 @@ class Task extends Component {
         </Pane>
 
         <Pane marginTop={40} paddingTop={24} borderTop="1px solid #D0D6DA">
-          <Text size={400} display="block" marginBottom={16}>Subtasks</Text>
+          <Pane size={400} display="block" marginBottom={16} className="clearfix">
+            <Text size={400} float="left">Subtasks</Text>
+            <Tooltip content="Add a subtask" position={Position.RIGHT}>
+              <IconButton
+                float="left"
+                height={24}
+                marginTop={-2}
+                marginLeft={8}
+                icon="plus"
+                onClick={() => this.props.newSubtask(this.props.taskIndex)} />
+            </Tooltip>
+          </Pane>
           {this.props.task.subtasks.map((subtask,t) => <Pane key={t}>
-            <Subtask disabled={this.props.task.completed || this.props.task.status === 'Cancelled'} checked={subtask.completed} taskIndex={this.props.taskIndex} index={t} toggle={this.props.toggleSubtask} label={subtask.content}  />
+            <Subtask
+              disabled={this.props.task.completed || this.props.task.status === 'Cancelled'}
+              checked={subtask.completed}
+              taskIndex={this.props.taskIndex}
+              taskId={this.props.task._id}
+              updateSubtask={this.props.updateSubtask}
+              index={t}
+              toggle={this.props.toggleSubtask}
+              label={subtask.content}  />
           </Pane>)}
         </Pane>
 

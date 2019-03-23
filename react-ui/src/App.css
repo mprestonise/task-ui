@@ -9,6 +9,10 @@ h2 {
   font-weight: 700 !important
 }
 
+.progress-bar--progress {
+  transition: all 150ms ease-out;
+}
+
 .new-task-btn:hover {
   background: transparent !important;
   color: white;
@@ -81,9 +85,26 @@ h2 {
   letter-spacing: -0.2px;
   font-weight: 700;
 }
+.subtask-name--input {
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 0 0 8px;
+  border-radius: 0 !important;
+  border-bottom: 1px solid #D0D6DA !important;
+}
 .task-desc--textarea {
   border: none !important;
   box-shadow: none !important;
   padding: 0;
   resize: none;
+}
+
+.subtask-checkbox button {
+  opacity: 0;
+}
+.subtask-checkbox:hover button {
+  opacity: 1
+}
+.subtask-item {
+  margin: 8px 0 !important
 }

@@ -79,6 +79,7 @@ if (cluster.isMaster) {
         desc: "This task does not have a description",
         team: "Camel team",
         status: "Started",
+        created_date: new Date(),
         completed: false,
         completed_date: null,
         cancelled_date: null,
@@ -194,6 +195,31 @@ if (cluster.isMaster) {
       tasks.findOneAndUpdate( { _id : ObjectId(req.params.id) },
       {
         $set: { team: req.body.team, updated: new Date() }
+      })
+
+      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+        if(err) { reject(err) } else {
+          res.json(items);
+        }
+      })
+    })
+  });
+
+  app.post('/api/task/:id/updateSubtasks', function (req, res) {
+    res.set('Content-Type', 'application/json');
+    // connect to Mongo
+    MongoClient.connect(mongoURL, { useNewUrlParser: true }, function(err, client) {
+
+      // check for errors
+      if (!err) {}
+
+      // get db cursor
+      const db = client.db(dbName);
+      const tasks = db.collection('tasks');
+
+      tasks.findOneAndUpdate( { _id : ObjectId(req.params.id) },
+      {
+        $set: { subtasks: req.body.subtasks, updated: new Date() }
       })
 
       tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
