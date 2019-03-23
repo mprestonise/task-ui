@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import moment from 'moment'
-import { Pane, Heading, Text, Strong, Select, Button } from 'evergreen-ui'
+import { Pane, Heading, Text, TextInput, Textarea, Strong, Select, IconButton, Button } from 'evergreen-ui'
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import Progress from '../Progress'
@@ -8,11 +8,35 @@ import Subtask from '../Subtask'
 
 class Task extends Component {
 
-  _handleChange = (taskindex, e) => {
-    console.log('handle change', e)
+  constructor(props){
+    super(props)
+    this.state = {
+      editingName: false,
+      newName: null,
+      editingDesc: false,
+      newDesc: null,
+      editingSubtask: false,
+    }
   }
-  _close = (e) => {
-    console.log('close', e)
+
+  _changeName = () => {
+    if(this.state.newName !== null){
+      this.props.changeName(this.props.taskIndex, this.state.newName, this.props.task._id)
+    }
+    this.setState({
+      newName: null,
+      editingName: false
+    })
+  }
+
+  _changeDesc = () => {
+    if(this.state.newDesc !== null){
+      this.props.changeDesc(this.props.taskIndex, this.state.newDesc, this.props.task._id)
+    }
+    this.setState({
+      newDesc: null,
+      editingDesc: false
+    })
   }
 
   render() {
@@ -38,28 +62,53 @@ class Task extends Component {
               : <Text color="white">{this.props.task.status}</Text>
             }
           </Pane>
-          <Text>{moment(this.props.task.updated).fromNow()}</Text>
+          <Text>Updated {moment(this.props.task.updated).fromNow()}</Text>
           <Pane
             float="right"
             position="relative"
             width={200}>
             <Text position="absolute" right="0" color="#676F76">Due {moment(this.props.task.due_date).format('DD MMMM YYYY')}</Text>
             <DatePicker
+              disabled={this.props.task.completed || this.props.task.status === 'Cancelled'}
               calendarClassName="due-date-calendar"
               selected={moment( this.props.task.due_date ).toDate()}
-              onChange={date => this.props.changeDueDate(this.props.taskIndex, date)}/>
+              onChange={date => this.props.changeDueDate(this.props.taskIndex, date, this.props.task._id)}/>
           </Pane>
         </Pane>
 
-        <Heading size={800} marginTop={24} marginBottom={16} color="#20252A">
-          {this.props.task.name}
-        </Heading>
+        {this.state.editingName
+          ? <Pane marginTop={22} marginBottom={14} className="clearfix">
+            <TextInput
+              className="task-name--input"
+              float="left"
+              required
+              autoFocus
+              onChange={e => this.setState({ newName: e.target.value })}
+              defaultValue={this.props.task.name}
+            />
+            <IconButton float="left" icon="tick" appearance="primary" intent="success" marginLeft={16} marginRight={8} onClick={() => this._changeName()} />
+            <IconButton float="left" icon="cross" onClick={() => this.setState({ newName: null, editingName: false })} />
+          </Pane>
+          : <Heading size={800} marginTop={24} marginBottom={16} color={`${this.props.task.status === 'Cancelled' ? '#676F76' : '#20252A'}`} onClick={() => this.setState({ editingName: true })}>{this.props.task.name}</Heading>
+        }
 
-        <Text>{this.props.task.desc}</Text>
+        {this.state.editingDesc
+          ? <Pane className="clearfix">
+            <Textarea
+              className="task-desc--textarea"
+              autoFocus
+              onChange={e => this.setState({ newDesc: e.target.value })}
+              defaultValue={this.props.task.desc}
+            />
+            <IconButton float="left" icon="tick" appearance="primary" intent="success" marginRight={8} onClick={() => this._changeDesc()} />
+            <IconButton float="left" icon="cross" onClick={() => this.setState({ newDesc: null, editingDesc: false })} />
+          </Pane>
+          : <Text onClick={() => this.setState({ editingDesc: true })}>{this.props.task.desc}</Text>
+        }
 
         <Pane marginTop={24}>
           <Text display="block" marginBottom={8} className="caps-label">Team</Text>
-          <Select value={this.props.task.team} onChange={(e) => this.props.selectTeam(this.props.taskIndex, e.target.value)}>
+          <Select disabled={this.props.task.completed || this.props.task.status === 'Cancelled'} value={this.props.task.team} onChange={(e) => this.props.selectTeam(this.props.taskIndex, e.target.value, this.props.task._id)}>
             <option value="Bear team">Bear team</option>
             <option value="Camel team">Camel team</option>
             <option value="Design">Design</option>
@@ -71,15 +120,15 @@ class Task extends Component {
         </Pane>
 
         <Pane display="flex" marginTop={32}>
-          <Button iconBefore="tick" appearance="primary" intent="success">Complete</Button>
-          <Button iconBefore="cross" appearance="default" intent="none" marginLeft={16}>Cancel task</Button>
+          <Button disabled={this.props.task.completed || this.props.task.status === 'Cancelled'} iconBefore="tick" appearance="primary" intent="success" onClick={() => this.props.completeTask(this.props.taskIndex, this.props.task._id)}>Complete</Button>
+          <Button disabled={this.props.task.completed || this.props.task.status === 'Cancelled'} iconBefore="cross" appearance="default" intent="none" marginLeft={16} onClick={() => this.props.cancelTask(this.props.taskIndex, this.props.task._id)}>Cancel task</Button>
           <Button iconBefore="cross" appearance="primary" intent="danger" marginLeft="auto" onClick={() => this.props.delete(this.props.task._id)}>Delete task</Button>
         </Pane>
 
         <Pane marginTop={40} paddingTop={24} borderTop="1px solid #D0D6DA">
           <Text size={400} display="block" marginBottom={16}>Subtasks</Text>
           {this.props.task.subtasks.map((subtask,t) => <Pane key={t}>
-            <Subtask checked={subtask.completed} taskIndex={this.props.taskIndex} index={t} toggle={this.props.toggleSubtask} label={subtask.content}  />
+            <Subtask disabled={this.props.task.completed || this.props.task.status === 'Cancelled'} checked={subtask.completed} taskIndex={this.props.taskIndex} index={t} toggle={this.props.toggleSubtask} label={subtask.content}  />
           </Pane>)}
         </Pane>
 

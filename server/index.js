@@ -80,6 +80,8 @@ if (cluster.isMaster) {
         team: "Camel team",
         status: "Started",
         completed: false,
+        completed_date: null,
+        cancelled_date: null,
         due_date: moment( new Date() ).add(7, 'days').toDate(),
         updated: new Date(),
         subtasks: [
@@ -92,6 +94,156 @@ if (cluster.isMaster) {
         artifacts: [],
         attachments: [],
         notes: []
+      })
+
+      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+        if(err) { reject(err) } else {
+          res.json(items);
+        }
+      })
+    })
+  });
+
+  app.post('/api/task/:id/updateName', function (req, res) {
+    res.set('Content-Type', 'application/json');
+    // connect to Mongo
+    MongoClient.connect(mongoURL, { useNewUrlParser: true }, function(err, client) {
+
+      // check for errors
+      if (!err) {}
+
+      // get db cursor
+      const db = client.db(dbName);
+      const tasks = db.collection('tasks');
+
+      tasks.findOneAndUpdate( { _id : ObjectId(req.params.id) },
+      {
+        $set: { name: req.body.name, updated: new Date() }
+      })
+
+      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+        if(err) { reject(err) } else {
+          res.json(items);
+        }
+      })
+    })
+  });
+
+  app.post('/api/task/:id/updateDesc', function (req, res) {
+    res.set('Content-Type', 'application/json');
+    // connect to Mongo
+    MongoClient.connect(mongoURL, { useNewUrlParser: true }, function(err, client) {
+
+      // check for errors
+      if (!err) {}
+
+      // get db cursor
+      const db = client.db(dbName);
+      const tasks = db.collection('tasks');
+
+      tasks.findOneAndUpdate( { _id : ObjectId(req.params.id) },
+      {
+        $set: { desc: req.body.desc, updated: new Date() }
+      })
+
+      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+        if(err) { reject(err) } else {
+          res.json(items);
+        }
+      })
+    })
+  });
+
+  app.post('/api/task/:id/updateDueDate', function (req, res) {
+    res.set('Content-Type', 'application/json');
+    // connect to Mongo
+    MongoClient.connect(mongoURL, { useNewUrlParser: true }, function(err, client) {
+
+      // check for errors
+      if (!err) {}
+
+      // get db cursor
+      const db = client.db(dbName);
+      const tasks = db.collection('tasks');
+
+      tasks.findOneAndUpdate( { _id : ObjectId(req.params.id) },
+      {
+        $set: { due_date: req.body.due_date, updated: new Date() }
+      })
+
+      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+        if(err) { reject(err) } else {
+          res.json(items);
+        }
+      })
+    })
+  });
+
+  app.post('/api/task/:id/updateTeam', function (req, res) {
+    res.set('Content-Type', 'application/json');
+    // connect to Mongo
+    MongoClient.connect(mongoURL, { useNewUrlParser: true }, function(err, client) {
+
+      // check for errors
+      if (!err) {}
+
+      // get db cursor
+      const db = client.db(dbName);
+      const tasks = db.collection('tasks');
+
+      tasks.findOneAndUpdate( { _id : ObjectId(req.params.id) },
+      {
+        $set: { team: req.body.team, updated: new Date() }
+      })
+
+      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+        if(err) { reject(err) } else {
+          res.json(items);
+        }
+      })
+    })
+  });
+
+  app.post('/api/task/:id/completed', function (req, res) {
+    res.set('Content-Type', 'application/json');
+    // connect to Mongo
+    MongoClient.connect(mongoURL, { useNewUrlParser: true }, function(err, client) {
+
+      // check for errors
+      if (!err) {}
+
+      // get db cursor
+      const db = client.db(dbName);
+      const tasks = db.collection('tasks');
+
+      tasks.findOneAndUpdate( { _id : ObjectId(req.params.id) },
+      {
+        $set: { completed: true, completed_date: new Date(), updated: new Date() }
+      })
+
+      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+        if(err) { reject(err) } else {
+          res.json(items);
+        }
+      })
+    })
+  });
+
+  app.post('/api/task/:id/cancelled', function (req, res) {
+    res.set('Content-Type', 'application/json');
+    // connect to Mongo
+    MongoClient.connect(mongoURL, { useNewUrlParser: true }, function(err, client) {
+
+      // check for errors
+      if (!err) {}
+
+      // get db cursor
+      const db = client.db(dbName);
+      const tasks = db.collection('tasks');
+
+      tasks.findOneAndUpdate( { _id : ObjectId(req.params.id) },
+      {
+        $set: { status: 'Cancelled', cancelled_date: new Date(), updated: new Date() }
       })
 
       tasks.find().sort({ updated: -1 }).toArray(function(err, items) {

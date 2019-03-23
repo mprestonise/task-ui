@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import update from 'immutability-helper'
-import { Pane, Text, Button, Icon, Tooltip, Position } from 'evergreen-ui'
+import { Pane, Avatar, Text, Button, Icon, Tooltip, Position } from 'evergreen-ui'
 import Progress from './Progress'
 import TaskCard from './TaskCard'
 import Task from './Task'
@@ -95,16 +95,164 @@ class App extends Component {
     })
   }
 
-  _changeDueDate = (taskIndex, date) => {
+  _changeDueDate = (taskIndex, date, taskId) => {
     this.setState({
       tasks: update(this.state.tasks, { [taskIndex]: { due_date: { $set: date } } })
     })
+    fetch(`/api/task/${taskId}/updateDueDate`, {
+      method: 'POST',
+      headers: { 'Content-Type' : 'application/json' },
+      body: JSON.stringify({ due_date: date })
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`status ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(json => {
+        this.setState({
+          tasks: json,
+          fetching: false
+        });
+      }).catch(e => {
+        this.setState({
+          fetching: false
+        });
+      })
   }
 
-  _selectTeam = (taskIndex, value) => {
+  _changeName = (taskIndex, name, taskId) => {
+    this.setState({
+      tasks: update(this.state.tasks, { [taskIndex]: { name: { $set: name } } })
+    })
+    fetch(`/api/task/${taskId}/updateName`, {
+      method: 'POST',
+      headers: { 'Content-Type' : 'application/json' },
+      body: JSON.stringify({ name: name })
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`status ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(json => {
+        this.setState({
+          tasks: json,
+          fetching: false
+        });
+      }).catch(e => {
+        this.setState({
+          fetching: false
+        });
+      })
+  }
+
+  _changeDesc = (taskIndex, desc, taskId) => {
+    this.setState({
+      tasks: update(this.state.tasks, { [taskIndex]: { desc: { $set: desc } } })
+    })
+    fetch(`/api/task/${taskId}/updateDesc`, {
+      method: 'POST',
+      headers: { 'Content-Type' : 'application/json' },
+      body: JSON.stringify({ desc: desc })
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`status ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(json => {
+        this.setState({
+          tasks: json,
+          fetching: false
+        });
+      }).catch(e => {
+        this.setState({
+          fetching: false
+        });
+      })
+  }
+
+  _selectTeam = (taskIndex, value, taskId) => {
     this.setState({
       tasks: update(this.state.tasks, { [taskIndex]: { team: { $set: value } } })
     })
+    fetch(`/api/task/${taskId}/updateTeam`, {
+      method: 'POST',
+      headers: { 'Content-Type' : 'application/json' },
+      body: JSON.stringify({ team: value })
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`status ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(json => {
+        this.setState({
+          tasks: json,
+          fetching: false
+        });
+      }).catch(e => {
+        this.setState({
+          fetching: false
+        });
+      })
+  }
+
+  _cancelTask = (taskIndex, taskId) => {
+    this.setState({
+      tasks: update(this.state.tasks, { [taskIndex]: { status: { $set: 'Cancelled' }, updated: { $set: new Date() }, cancelled_date: { $set: new Date() } } })
+    })
+    fetch(`/api/task/${taskId}/cancelled`, {
+      method: 'POST',
+      headers: { 'Content-Type' : 'application/json' }
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`status ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(json => {
+        this.setState({
+          tasks: json,
+          fetching: false
+        });
+      }).catch(e => {
+        this.setState({
+          fetching: false
+        });
+      })
+  }
+
+  _completeTask = (taskIndex, taskId) => {
+    this.setState({
+      tasks: update(this.state.tasks, { [taskIndex]: { status: { $set: 'Completed' }, updated: { $set: new Date() }, completed: { $set: true }, completed_date: { $set: new Date() } } })
+    })
+    fetch(`/api/task/${taskId}/cancelled`, {
+      method: 'POST',
+      headers: { 'Content-Type' : 'application/json' }
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`status ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(json => {
+        this.setState({
+          tasks: json,
+          fetching: false
+        });
+      }).catch(e => {
+        this.setState({
+          fetching: false
+        });
+      })
   }
 
   render() {
@@ -119,7 +267,15 @@ class App extends Component {
           width={64}
           height="100vh"
           background="#20252A">
-          <Pane width={40} height={40} marginTop={16} marginLeft={12} borderRadius={4} background="#4099FF" />
+          <Tooltip content="Michael Prestonise" position={Position.RIGHT}>
+          <Avatar
+            src="https://pbs.twimg.com/profile_images/861675088713846784/Eb9nssrg_400x400.jpg"
+            name="Michael Prestonise"
+            size={40}
+            marginTop={16}
+            marginLeft={12}
+          />
+          </Tooltip>
           <Tooltip content="Create a new task" position={Position.RIGHT}>
             <Button
               appearance="minimal"
@@ -217,8 +373,12 @@ class App extends Component {
               task={this.state.tasks[this.state.selectedTask]}
               taskIndex={this.state.selectedTask}
               toggleSubtask={this._toggleSubtask}
+              changeName={this._changeName}
+              changeDesc={this._changeDesc}
               selectTeam={this._selectTeam}
               changeDueDate={this._changeDueDate}
+              cancelTask={this._cancelTask}
+              completeTask={this._completeTask}
               delete={this._deleteTask} />
           </Pane>
 

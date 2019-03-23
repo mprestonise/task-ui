@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import moment from 'moment'
-import { Pane, Text, Icon, Select, Button } from 'evergreen-ui'
+import { Pane, Text, Icon, IconButton, Select, Button } from 'evergreen-ui'
 
 class TaskCard extends Component {
 
@@ -55,11 +55,12 @@ class TaskCard extends Component {
             }
           </Pane>
 
-          <Icon
+          <IconButton
             className="task-card--submenu"
             icon="more"
-            size={20}
+            size={400}
             color="#90999F"
+            disabled={this.props.task.completed || this.props.task.status === 'Cancelled'}
             onClick={() => this.setState({ submenu: !this.state.submenu })} />
 
           {this.state.submenu
@@ -72,7 +73,7 @@ class TaskCard extends Component {
               zIndex={100}
               background="white"
               padding={8}>
-              <Select value={this.props.task.team} onChange={(e) => this.props.selectTeam(this.props.taskIndex, e.target.value)}>
+              <Select value={this.props.task.team} onChange={(e) => this.props.selectTeam(this.props.taskIndex, e.target.value, task._id)}>
                 <option value="Bear team">Bear team</option>
                 <option value="Camel team">Camel team</option>
                 <option value="Design">Design</option>

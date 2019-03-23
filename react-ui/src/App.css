@@ -26,7 +26,9 @@ h2 {
 
 .task-list-item {
   opacity: 0.5;
-  cursor: pointer;
+}
+.task-list-item > div > div {
+  cursor: pointer
 }
 .task-list-item:hover,
 .task-list-item.selected {
@@ -35,12 +37,12 @@ h2 {
 }
 
 .task-card--submenu {
-  opacity: 0;
+  opacity: 0 !important;
   transform: rotate(-90deg)
 }
-.task-list-item:hover .task-card--submenu {
-  opacity: 1;
-}
+.task-list-item:hover .task-card--submenu { opacity: 1 !important }
+.task-list-item:hover .task-card--submenu[disabled] { opacity: 0.5 !important }
+.task-card--submenu[disabled]{ background: none !important }
 
 .badge {
   padding: 6px 12px;
@@ -61,9 +63,27 @@ h2 {
   background: rgba(144,153,159,1)
 }
 
-.react-datepicker__input-container {
-  opacity: 0;
+.react-datepicker-wrapper { float: right }
+.due-date-calendar { margin-left: -64px }
+.react-datepicker__input-container { opacity: 0 }
+.due-date-calendar .react-datepicker__triangle { margin-left: 62px !important }
+
+.task-name--input {
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0;
+  width: calc(100% - 88px);
+  font-size: 29px;
+  color: #20252A;
+  height: 36px;
+  display: block;
+  overflow: visible !important;
+  letter-spacing: -0.2px;
+  font-weight: 700;
 }
-.due-date-calendar .react-datepicker__triangle {
-  margin-left: 62px !important;
+.task-desc--textarea {
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0;
+  resize: none;
 }
