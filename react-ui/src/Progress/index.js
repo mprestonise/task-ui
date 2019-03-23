@@ -12,7 +12,7 @@ class Progress extends Component {
         <Pane width={`${this.props.percent.toFixed(0)}%`} minWidth={4} position="absolute" height={6} background="#47B881" borderRadius={4} />
       </Pane>
 
-      <Text size={300}>{this.props.percent}% Completed</Text>
+      <Text size={300}>{this.props.percent.toFixed(0)}% Completed</Text>
 
     </Pane>);
   }

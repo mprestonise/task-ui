@@ -54,7 +54,69 @@ if (cluster.isMaster) {
       const db = client.db(dbName);
       const tasks = db.collection('tasks');
 
-      tasks.find().toArray(function(err, items) {
+      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+        if(err) { reject(err) } else {
+          res.json(items);
+        }
+      })
+    })
+  });
+
+  app.post('/api/task/new', function (req, res) {
+    res.set('Content-Type', 'application/json');
+    // connect to Mongo
+    MongoClient.connect(mongoURL, { useNewUrlParser: true }, function(err, client) {
+
+      // check for errors
+      if (!err) {}
+
+      // get db cursor
+      const db = client.db(dbName);
+      const tasks = db.collection('tasks');
+
+      tasks.insertOne({
+        name: "New task",
+        desc: "This task does not have a description",
+        team: "Camel team",
+        status: "Started",
+        completed: false,
+        due_date: moment( new Date() ).add(7, 'days').toDate(),
+        updated: new Date(),
+        subtasks: [
+            {
+                "completed": false,
+                "content": "Create task content",
+                "added": new Date()
+            }
+        ],
+        artifacts: [],
+        attachments: [],
+        notes: []
+      })
+
+      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+        if(err) { reject(err) } else {
+          res.json(items);
+        }
+      })
+    })
+  });
+
+  app.post('/api/task/:id/archive', function (req, res) {
+    res.set('Content-Type', 'application/json');
+    // connect to Mongo
+    MongoClient.connect(mongoURL, { useNewUrlParser: true }, function(err, client) {
+
+      // check for errors
+      if (!err) {}
+
+      // get db cursor
+      const db = client.db(dbName);
+      const tasks = db.collection('tasks');
+
+      tasks.deleteOne( { _id : ObjectId(req.params.id) } )
+
+      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
         if(err) { reject(err) } else {
           res.json(items);
         }
