@@ -66,6 +66,9 @@ h2 {
 .badge-cancelled {
   background: rgba(144,153,159,1)
 }
+.badge-created {
+  background: #FFD040
+}
 
 .react-datepicker-wrapper { float: right }
 .due-date-calendar { margin-left: -64px }
@@ -92,11 +95,17 @@ h2 {
   border-radius: 0 !important;
   border-bottom: 1px solid #D0D6DA !important;
 }
+.task-note--textarea,
 .task-desc--textarea {
   border: none !important;
   box-shadow: none !important;
   padding: 0;
   resize: none;
+}
+.task-note--textarea {
+  min-height: 60px;
+  border-bottom: 1px solid #D0D6DA !important;
+  border-radius: 0;
 }
 
 .subtask-checkbox button {

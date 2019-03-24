@@ -106,6 +106,7 @@ class App extends Component {
         this._calculateProgress(json)
         this.setState({
           tasks: json,
+          selectedTask: 0,
           fetching: false
         });
       }).catch(e => {
@@ -139,6 +140,7 @@ class App extends Component {
           this._calculateProgress(json)
           this.setState({
             tasks: json,
+            selectedTask: 0,
             fetching: false
           });
         }).catch(e => {
@@ -169,6 +171,7 @@ class App extends Component {
         toaster.success('Task updated', { id: 'updatingTask' })
         this.setState({
           tasks: json,
+          selectedTask: 0,
           fetching: false
         });
       }).catch(e => {
@@ -198,6 +201,7 @@ class App extends Component {
         toaster.success('Task updated', { id: 'updatingTask' })
         this.setState({
           tasks: json,
+          selectedTask: 0,
           fetching: false
         });
       }).catch(e => {
@@ -227,6 +231,7 @@ class App extends Component {
         toaster.success('Task updated', { id: 'updatingTask' })
         this.setState({
           tasks: json,
+          selectedTask: 0,
           fetching: false
         });
       }).catch(e => {
@@ -269,6 +274,7 @@ class App extends Component {
         this._calculateProgress(json)
         this.setState({
           tasks: json,
+          selectedTask: 0,
           fetching: false
         });
       }).catch(e => {
@@ -298,6 +304,63 @@ class App extends Component {
         toaster.success('Task updated', { id: 'updatingTask' })
         this.setState({
           tasks: json,
+          selectedTask: 0,
+          fetching: false
+        });
+      }).catch(e => {
+        this.setState({
+          fetching: false
+        });
+      })
+  }
+
+  _addNote = (taskIndex, note, taskId) => {
+    toaster.notify('Adding note..', { id: 'updatingTask' })
+    fetch(`/api/task/${taskId}/addNote`, {
+      method: 'POST',
+      headers: { 'Content-Type' : 'application/json' },
+      body: JSON.stringify({ note: note })
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`status ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(json => {
+        toaster.success('Note added', { id: 'updatingTask' })
+        this.setState({
+          tasks: json,
+          selectedTask: 0,
+          fetching: false
+        });
+      }).catch(e => {
+        this.setState({
+          fetching: false
+        });
+      })
+  }
+
+  _startTask = (taskIndex, taskId) => {
+    toaster.notify("Let's do this!", { id: 'updatingTask' })
+    this.setState({
+      tasks: update(this.state.tasks, { [taskIndex]: { status: { $set: 'Started' }, updated: { $set: new Date() }, started_date: { $set: new Date() } } })
+    })
+    fetch(`/api/task/${taskId}/startTask`, {
+      method: 'POST',
+      headers: { 'Content-Type' : 'application/json' }
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`status ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(json => {
+        window.setTimeout(() => { toaster.success("Task started! Go get 'em!!", { id: 'updatingTask' }) }, 750)
+        this.setState({
+          tasks: json,
+          selectedTask: 0,
           fetching: false
         });
       }).catch(e => {
@@ -326,6 +389,7 @@ class App extends Component {
         toaster.success('Task cancelled', { id: 'updatingTask' })
         this.setState({
           tasks: json,
+          selectedTask: 0,
           fetching: false
         });
       }).catch(e => {
@@ -354,6 +418,7 @@ class App extends Component {
         toaster.success('Task completed! Good job!!', { id: 'updatingTask' })
         this.setState({
           tasks: json,
+          selectedTask: 0,
           fetching: false
         });
       }).catch(e => {
@@ -428,16 +493,20 @@ class App extends Component {
           <Pane marginTop={48}>
             <Text className="caps-label">Status</Text>
             <Pane display="flex" alignItems="center" marginTop={16}>
-              <Pane width={8} height={8} marginRight={8} borderRadius={8} background="#47B881" />
-              <Text size={300} color="#676f76">Completed</Text>
-            </Pane>
-            <Pane display="flex" alignItems="center" marginTop={16}>
               <Pane width={8} height={8} marginRight={8} borderRadius={8} background="#4099FF" />
               <Text size={300} color="#676f76">Started</Text>
             </Pane>
             <Pane display="flex" alignItems="center" marginTop={16}>
+              <Pane width={8} height={8} marginRight={8} borderRadius={8} background="#FFD040" />
+              <Text size={300} color="#676f76">Created</Text>
+            </Pane>
+            <Pane display="flex" alignItems="center" marginTop={16}>
               <Pane width={8} height={8} marginRight={8} borderRadius={8} background="#EF4D4D" />
               <Text size={300} color="#676f76">Overdue</Text>
+            </Pane>
+            <Pane display="flex" alignItems="center" marginTop={16}>
+              <Pane width={8} height={8} marginRight={8} borderRadius={8} background="#47B881" />
+              <Text size={300} color="#676f76">Completed</Text>
             </Pane>
             <Pane display="flex" alignItems="center" marginTop={16}>
               <Pane width={8} height={8} marginRight={8} borderRadius={8} background="#90999F" />
@@ -474,6 +543,13 @@ class App extends Component {
           </Pane>
 
           <Pane padding={40} paddingTop={32} paddingBottom={0} background="#f6f8fA" width={"calc(100vw - 578px)"} overflow="scroll">
+            {this.state.tasks[this.state.selectedTask].status === 'Created'
+              ? <Pane marginBottom={32} display="flex">
+                <Text size={500} color="#20252A">Ready to get started on this task?</Text>
+                <Button marginTop={-6} marginLeft={16} appearance="primary" intent="primary" onClick={() => this._startTask(this.state.selectedTask, this.state.tasks[this.state.selectedTask]._id)}>Start this task</Button>
+              </Pane>
+              : null
+            }
             <Task
               task={this.state.tasks[this.state.selectedTask]}
               taskIndex={this.state.selectedTask}
@@ -484,6 +560,7 @@ class App extends Component {
               changeDueDate={this._changeDueDate}
               newSubtask={this._newSubtask}
               updateSubtask={this._updateSubtask}
+              addNote={this._addNote}
               cancelTask={this._cancelTask}
               completeTask={this._completeTask}
               delete={this._deleteTask} />

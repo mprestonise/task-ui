@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import moment from 'moment'
-import { Pane, Heading, Text, TextInput, Textarea, Strong, Select, IconButton, Button, Tooltip, Position } from 'evergreen-ui'
+import { Avatar, Pane, Heading, Text, TextInput, Textarea, Strong, IconButton, Button, Tooltip, Position } from 'evergreen-ui'
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import Progress from '../Progress'
@@ -17,7 +17,8 @@ class Task extends Component {
       newDesc: null,
       editingSubtask: false,
       addingNewSubtask: false,
-      newSubtask: null
+      newSubtask: null,
+      newNote: ''
     }
   }
 
@@ -41,6 +42,15 @@ class Task extends Component {
     })
   }
 
+  _saveNote = () => {
+    if(this.state.newNote !== null){
+      this.props.addNote(this.props.taskIndex, this.state.newNote, this.props.task._id)
+    }
+    this.setState({
+      newNote: '',
+    })
+  }
+
   render() {
     let completed = 0
     let total = 0
@@ -52,19 +62,19 @@ class Task extends Component {
       })
     }
     return(
-      <Pane background="white" padding={32} paddingBottom={40} borderTopRightRadius={8} borderTopLeftRadius={8}>
+      <Pane background="white" padding={32} paddingBottom={16} borderTopRightRadius={8} borderTopLeftRadius={8}>
 
         <Pane className="clearfix" width="100%">
           <Pane
             marginRight={16}
             marginTop={-6}
-            className={`badge ${this.props.task.completed ? 'badge-completed' : ''} ${this.props.task.status === 'Cancelled' ? 'badge-cancelled' : ''} ${moment(this.props.task.due_date).isBefore(new Date()) && !this.props.task.completed && this.props.task.status !== 'Cancelled' ? 'badge-overdue' : ''}`}>
+            className={`badge ${this.props.task.completed ? 'badge-completed' : ''} ${this.props.task.status === 'Cancelled' ? 'badge-cancelled' : ''} ${moment(this.props.task.due_date).isBefore(new Date()) && !this.props.task.completed && this.props.task.status !== 'Cancelled' ? 'badge-overdue' : ''} ${this.props.task.status === 'Created' ? 'badge-created' : ''}`}>
             {moment(this.props.task.due_date).isBefore(new Date()) && !this.props.task.completed && this.props.task.status !== 'Cancelled'
               ? <Strong color="white">Overdue</Strong>
               : <Text color="white">{this.props.task.status}</Text>
             }
           </Pane>
-          <Text>Updated {moment(this.props.task.updated).fromNow()}</Text>
+          <Text color="#676F76">Updated {moment(this.props.task.updated).fromNow()}</Text>
           <Pane
             float="right"
             position="relative"
@@ -109,23 +119,21 @@ class Task extends Component {
         }
 
         <Pane marginTop={40} display="flex">
-          <Pane>
-            <Text display="block" marginBottom={4} className="caps-label">Team</Text>
-            <Select disabled={this.props.task.completed || this.props.task.status === 'Cancelled'} value={this.props.task.team} onChange={(e) => this.props.selectTeam(this.props.taskIndex, e.target.value, this.props.task._id)}>
-              <option value="Bear team">Bear team</option>
-              <option value="Camel team">Camel team</option>
-              <option value="Design">Design</option>
-            </Select>
-          </Pane>
-
-          <Pane marginLeft={32}>
+          {this.props.task.started_date
+            ? <Pane marginRight={32}>
+              <Text display="block" marginBottom={5} className="caps-label">Started</Text>
+              <Text color="#676F76">{moment(this.props.task.started_date).format('DD MMMM YYYY')}</Text>
+            </Pane>
+            : null
+          }
+          <Pane marginRight={32}>
             <Progress percent={((completed / total)*100).toFixed(0)} />
           </Pane>
         </Pane>
 
 
         <Pane display="flex" marginTop={32}>
-          <Button disabled={this.props.task.completed || this.props.task.status === 'Cancelled'} iconBefore="tick" appearance="primary" intent="success" onClick={() => this.props.completeTask(this.props.taskIndex, this.props.task._id)}>Complete</Button>
+          <Button disabled={this.props.task.status === 'Created' || this.props.task.completed || this.props.task.status === 'Cancelled'} iconBefore="tick" appearance="primary" intent="success" onClick={() => this.props.completeTask(this.props.taskIndex, this.props.task._id)}>Complete</Button>
           <Button disabled={this.props.task.completed || this.props.task.status === 'Cancelled'} iconBefore="cross" appearance="default" intent="none" marginLeft={16} onClick={() => this.props.cancelTask(this.props.taskIndex, this.props.task._id)}>Cancel task</Button>
           <Button iconBefore="cross" appearance="primary" intent="danger" marginLeft="auto" onClick={() => this.props.delete(this.props.task._id)}>Delete task</Button>
         </Pane>
@@ -143,6 +151,10 @@ class Task extends Component {
                 onClick={() => this.props.newSubtask(this.props.taskIndex)} />
             </Tooltip>
           </Pane>
+          {this.props.task.subtasks && this.props.task.subtasks.length === 0
+            ? <Text display="block" size={300} color="#90999F">You haven't added any subtasks yet</Text>
+            : null
+          }
           {this.props.task.subtasks.map((subtask,t) => <Pane key={t}>
             <Subtask
               disabled={this.props.task.completed || this.props.task.status === 'Cancelled'}
@@ -158,6 +170,10 @@ class Task extends Component {
 
         <Pane marginTop={40} paddingTop={24} borderTop="1px solid #D0D6DA">
           <Text size={400} display="block" marginBottom={16}>Artifacts</Text>
+          {this.props.task.artifacts && this.props.task.artifacts.length === 0
+            ? <Text display="block" size={300} color="#90999F">You haven't added any artifacts yet</Text>
+            : null
+          }
           {this.props.task.artifacts.map((artifact,a) => <Pane key={a}>
             <img alt={`Added ${moment(artifact.added).format('DD MMMM YYYY')}`} style={{ borderRadius: '4px' }} height="64" src={artifact.url} title={moment(artifact.added).format('DD MMMM YYYY')} />
           </Pane>)}
@@ -165,6 +181,10 @@ class Task extends Component {
 
         <Pane marginTop={40} paddingTop={24} borderTop="1px solid #D0D6DA">
           <Text size={400} display="block" marginBottom={16}>Attachments</Text>
+          {this.props.task.attachments && this.props.task.attachments.length === 0
+            ? <Text display="block" size={300} color="#90999F">You haven't added any attachments yet</Text>
+            : null
+          }
           {this.props.task.attachments.map((attachment,a) => <Pane key={a}>
             <Button appearance="primary" intent="none">{attachment.name}</Button>
           </Pane>)}
@@ -172,10 +192,34 @@ class Task extends Component {
 
         <Pane marginTop={40} paddingBottom={16} paddingTop={24} borderTop="1px solid #D0D6DA">
           <Text size={400} display="block" marginBottom={16}>Notes</Text>
-          {this.props.task.notes.map((note,a) => <Pane key={a}>
-            <Text size={300} color="#90999F">{moment(note.added).format('DD MMMM YYYY')}</Text>
-            <Text display="block" marginBottom={16} size={400}>{note.content}</Text>
-          </Pane>)}
+
+          <Pane className="clearfix">
+            <Textarea
+              marginBottom={4}
+              className="task-note--textarea"
+              onChange={e => this.setState({ newNote: e.target.value })}
+              placeholder="Add a note.."
+              value={this.state.newNote}
+            />
+            <Button float="left" iconBefore="tick" appearance="primary" intent="success" marginRight={8} disabled={!this.state.newNote} onClick={() => this._saveNote()}>Add</Button>
+            <Button float="left" appearance="minimal" intent="none" disabled={!this.state.newNote} onClick={() => this.setState({ newNote: null })}>Cancel</Button>
+          </Pane>
+
+          <Pane marginTop={40}>
+            {this.props.task.notes.map((note,a) => <Pane marginBottom={16} key={a} display="flex">
+              <Avatar
+                src="https://pbs.twimg.com/profile_images/861675088713846784/Eb9nssrg_400x400.jpg"
+                name="Michael Prestonise"
+                size={40}
+                marginRight={8}
+              />
+              <Pane marginTop={-8}>
+                <Text size={300} color="#90999F">{moment(note.added).format('DD MMMM YYYY')}</Text>
+                <Text display="block" marginBottom={16} size={400}>{note.content}</Text>
+              </Pane>
+            </Pane>)}
+          </Pane>
+
         </Pane>
 
       </Pane>

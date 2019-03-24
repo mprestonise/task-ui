@@ -11,6 +11,13 @@ class Subtask extends Component {
     }
   }
 
+  _handleSubtask = () => {
+    if(this.state.newSubtask !== '') {
+      this.props.updateSubtask(this.props.taskIndex, this.props.index, this.state.newSubtask, this.props.taskId)
+    }
+    this.setState({ editingSubtask: false, newSubtask: null })
+  }
+
   render() {
     return (<Pane>
       {this.state.editingSubtask
@@ -23,7 +30,7 @@ class Subtask extends Component {
             onChange={e => this.setState({ newSubtask: e.target.value })}
             defaultValue={this.props.label}
           />
-          <IconButton float="left" icon="tick" appearance="primary" intent="success" marginLeft={16} marginRight={8} disabled={this.state.newSubtask === null} onClick={() => this.props.updateSubtask(this.props.taskIndex, this.props.index, this.state.newSubtask, this.props.taskId)} />
+          <IconButton float="left" icon="tick" appearance="primary" intent="success" marginLeft={16} marginRight={8} disabled={this.state.newSubtask === null} onClick={() => this._handleSubtask()} />
           <IconButton float="left" icon="cross" onClick={() => this.setState({ newSubtask: null, editingSubtask: false })} />
         </Pane>
         : <Pane display="flex" className="subtask-checkbox">

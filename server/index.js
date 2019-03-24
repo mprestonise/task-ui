@@ -78,20 +78,16 @@ if (cluster.isMaster) {
         name: "New task",
         desc: "This task does not have a description",
         team: "Camel team",
-        status: "Started",
+        status: "Created",
         created_date: new Date(),
+        started_date: null,
         completed: false,
         completed_date: null,
         cancelled_date: null,
+        was_overdue: false,
         due_date: moment( new Date() ).add(7, 'days').toDate(),
         updated: new Date(),
-        subtasks: [
-            {
-                "completed": false,
-                "content": "Create task content",
-                "added": new Date()
-            }
-        ],
+        subtasks: [],
         artifacts: [],
         attachments: [],
         notes: []
@@ -230,6 +226,62 @@ if (cluster.isMaster) {
     })
   });
 
+  app.post('/api/task/:id/addNote', function (req, res) {
+    res.set('Content-Type', 'application/json');
+    // connect to Mongo
+    MongoClient.connect(mongoURL, { useNewUrlParser: true }, function(err, client) {
+
+      // check for errors
+      if (!err) {}
+
+      // get db cursor
+      const db = client.db(dbName);
+      const tasks = db.collection('tasks');
+
+      const newNote = {
+        added: new Date(),
+        content: req.body.note
+      }
+
+      tasks.findOneAndUpdate( { _id : ObjectId(req.params.id) },
+      {
+        $push: { notes: { $each: [newNote], $position: 0 } },
+        $set: { updated: new Date() }
+      })
+
+      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+        if(err) { reject(err) } else {
+          res.json(items);
+        }
+      })
+    })
+  });
+
+  app.post('/api/task/:id/startTask', function (req, res) {
+    res.set('Content-Type', 'application/json');
+    // connect to Mongo
+    MongoClient.connect(mongoURL, { useNewUrlParser: true }, function(err, client) {
+
+      // check for errors
+      if (!err) {}
+
+      // get db cursor
+      const db = client.db(dbName);
+      const tasks = db.collection('tasks');
+
+      tasks.findOneAndUpdate( { _id : ObjectId(req.params.id) },
+      {
+        $set: { status: 'Started', started_date: new Date(), updated: new Date() }
+      })
+
+      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+        if(err) { reject(err) } else {
+          res.json(items);
+        }
+      })
+    })
+  });
+
   app.post('/api/task/:id/completed', function (req, res) {
     res.set('Content-Type', 'application/json');
     // connect to Mongo
@@ -244,7 +296,7 @@ if (cluster.isMaster) {
 
       tasks.findOneAndUpdate( { _id : ObjectId(req.params.id) },
       {
-        $set: { completed: true, completed_date: new Date(), updated: new Date() }
+        $set: { status: 'Completed', completed: true, completed_date: new Date(), updated: new Date() }
       })
 
       tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
