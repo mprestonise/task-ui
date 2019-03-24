@@ -314,6 +314,60 @@ class App extends Component {
       })
   }
 
+  _addAttachment = (taskIndex, attachment, taskId) => {
+    toaster.notify('Attaching..', { id: 'updatingTask' })
+    fetch(`/api/task/${taskId}/addAttachment`, {
+      method: 'POST',
+      headers: { 'Content-Type' : 'application/json' },
+      body: JSON.stringify({ attachment: attachment })
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`status ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(json => {
+        toaster.success('Attachment.. attached!', { id: 'updatingTask' })
+        this.setState({
+          tasks: json,
+          selectedTask: 0,
+          fetching: false
+        });
+      }).catch(e => {
+        this.setState({
+          fetching: false
+        });
+      })
+  }
+
+  _removeAttachment = (taskIndex, attachment, taskId) => {
+    toaster.danger('Detaching..', { id: 'updatingTask' })
+    fetch(`/api/task/${taskId}/removeAttachment`, {
+      method: 'POST',
+      headers: { 'Content-Type' : 'application/json' },
+      body: JSON.stringify({ attachment: attachment })
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`status ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(json => {
+        toaster.success('Bye, attachment..', { id: 'updatingTask' })
+        this.setState({
+          tasks: json,
+          selectedTask: 0,
+          fetching: false
+        });
+      }).catch(e => {
+        this.setState({
+          fetching: false
+        });
+      })
+  }
+
   _addNote = (taskIndex, note, taskId) => {
     toaster.notify('Adding note..', { id: 'updatingTask' })
     fetch(`/api/task/${taskId}/addNote`, {
@@ -560,6 +614,8 @@ class App extends Component {
               changeDueDate={this._changeDueDate}
               newSubtask={this._newSubtask}
               updateSubtask={this._updateSubtask}
+              addAttachment={this._addAttachment}
+              removeAttachment={this._removeAttachment}
               addNote={this._addNote}
               cancelTask={this._cancelTask}
               completeTask={this._completeTask}

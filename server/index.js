@@ -226,6 +226,58 @@ if (cluster.isMaster) {
     })
   });
 
+  app.post('/api/task/:id/addAttachment', function (req, res) {
+    res.set('Content-Type', 'application/json');
+    // connect to Mongo
+    MongoClient.connect(mongoURL, { useNewUrlParser: true }, function(err, client) {
+
+      // check for errors
+      if (!err) {}
+
+      // get db cursor
+      const db = client.db(dbName);
+      const tasks = db.collection('tasks');
+
+      tasks.findOneAndUpdate( { _id : ObjectId(req.params.id) },
+      {
+        $push: { attachments: { $each: [req.body.attachment], $position: 0 } },
+        $set: { updated: new Date() }
+      })
+
+      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+        if(err) { reject(err) } else {
+          res.json(items);
+        }
+      })
+    })
+  });
+
+  app.post('/api/task/:id/removeAttachment', function (req, res) {
+    res.set('Content-Type', 'application/json');
+    // connect to Mongo
+    MongoClient.connect(mongoURL, { useNewUrlParser: true }, function(err, client) {
+
+      // check for errors
+      if (!err) {}
+
+      // get db cursor
+      const db = client.db(dbName);
+      const tasks = db.collection('tasks');
+
+      tasks.findOneAndUpdate( { _id : ObjectId(req.params.id) },
+      {
+        $pull: { attachments: { url: req.body.attachment.url } },
+        $set: { updated: new Date() }
+      })
+
+      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+        if(err) { reject(err) } else {
+          res.json(items);
+        }
+      })
+    })
+  });
+
   app.post('/api/task/:id/addNote', function (req, res) {
     res.set('Content-Type', 'application/json');
     // connect to Mongo

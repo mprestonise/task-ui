@@ -117,3 +117,24 @@ h2 {
 .subtask-item {
   margin: 8px 0 !important
 }
+
+.attachment-pill {
+  display: inline-flex;
+  padding: 8px 4px 6px 12px;
+  border-radius: 4px;
+  background: rgba(64,153,255,0.1);
+  color: white;
+}
+.attachment-pill * {
+  color: #4099FF !important;
+  fill: #4099FF !important;
+}
+.attachment-pill button {
+  margin-top: -1px;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+.attachment-pill > button:hover * {
+  fill: #20252A !important;
+}

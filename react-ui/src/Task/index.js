@@ -18,6 +18,9 @@ class Task extends Component {
       editingSubtask: false,
       addingNewSubtask: false,
       newSubtask: null,
+      addingAttachment: false,
+      newAttachmentURL: null,
+      newAttachmentLabel: null,
       newNote: ''
     }
   }
@@ -49,6 +52,24 @@ class Task extends Component {
     this.setState({
       newNote: '',
     })
+  }
+
+  _saveAttachment = () => {
+    const newAttachment = {
+      label: this.state.newAttachmentLabel,
+      url: this.state.newAttachmentURL,
+      added: new Date()
+    }
+    this.props.addAttachment(this.props.taskIndex, newAttachment, this.props.task._id)
+    this.setState({
+      addingAttachment: false,
+      newAttachmentURL: null,
+      newAttachmentLabel: null
+    })
+  }
+
+  _openAttachment = (url) => {
+    window.open(url, "_blank")
   }
 
   render() {
@@ -180,14 +201,55 @@ class Task extends Component {
         </Pane>
 
         <Pane marginTop={40} paddingTop={24} borderTop="1px solid #D0D6DA">
-          <Text size={400} display="block" marginBottom={16}>Attachments</Text>
-          {this.props.task.attachments && this.props.task.attachments.length === 0
+        <Pane size={400} display="block" marginBottom={16} className="clearfix">
+          <Text size={400} float="left">Attachments</Text>
+          <Tooltip content="Add an attachment" position={Position.RIGHT}>
+            <IconButton
+              float="left"
+              height={24}
+              marginTop={-2}
+              marginLeft={8}
+              icon="plus"
+              onClick={() => this.setState({ addingAttachment: true })} />
+          </Tooltip>
+        </Pane>
+          {this.props.task.attachments && !this.state.addingAttachment && this.props.task.attachments.length === 0
             ? <Text display="block" size={300} color="#90999F">You haven't added any attachments yet</Text>
             : null
           }
-          {this.props.task.attachments.map((attachment,a) => <Pane key={a}>
-            <Button appearance="primary" intent="none">{attachment.name}</Button>
+          {this.props.task.attachments.map((attachment,a) => <Pane key={a} display="flex" marginRight={8} className="attachment-pill">
+            <Text style={{ cursor: 'pointer' }} onClick={() => this._openAttachment(attachment.url)}>{attachment.label}</Text>
+            <IconButton icon="cross" color="#4099FF" height={24} onClick={() => this.props.removeAttachment(this.props.taskIndex, attachment, this.props.task._id)} />
           </Pane>)}
+          {this.state.addingAttachment
+            ? <Pane>
+              <Text display="block" color="#676F76" marginBottom={8}>Add a new attachment</Text>
+              <TextInput
+                maxWidth={300}
+                marginBottom={8}
+                display="block"
+                className="task-attachment--url"
+                required
+                autoFocus
+                placeholder="What is the URL of this attachment?"
+                onChange={e => this.setState({ newAttachmentURL: e.target.value })}
+              />
+              <TextInput
+                maxWidth={300}
+                marginBottom={8}
+                display="block"
+                className="task-attachment--label"
+                required
+                placeholder="Give this attachment a label"
+                onChange={e => this.setState({ newAttachmentLabel: e.target.value })}
+              />
+              <Pane marginBottom={24} className="clearfix">
+                <IconButton disabled={!this.state.newAttachmentURL || !this.state.newAttachmentLabel} float="left" icon="tick" appearance="primary" intent="success" marginRight={8} onClick={() => this._saveAttachment()} />
+                <IconButton float="left" icon="cross" onClick={() => this.setState({ addingAttachment: false, newAttachmentURL: null, newAttachmentLabel: null })} />
+              </Pane>
+            </Pane>
+            : null
+          }
         </Pane>
 
         <Pane marginTop={40} paddingBottom={16} paddingTop={24} borderTop="1px solid #D0D6DA">
