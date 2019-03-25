@@ -119,11 +119,11 @@ h2 {
 }
 
 .attachment-pill {
-  display: inline-flex;
-  padding: 8px 4px 6px 12px;
-  border-radius: 4px;
-  background: rgba(64,153,255,0.1);
-  color: white;
+  display: inline-flex !important;
+  padding: 8px 4px 6px 12px !important;
+  border-radius: 4px !important;
+  background: rgba(64,153,255,0.1) !important;
+  color: white !important;
 }
 .attachment-pill * {
   color: #4099FF !important;
