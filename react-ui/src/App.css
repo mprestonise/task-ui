@@ -1,8 +1,8 @@
 .caps-label {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  color: #90999F;
+  font-size: 10px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 2px !important;
+  color: #90999F !important;
 }
 
 h2 {
@@ -10,88 +10,88 @@ h2 {
 }
 
 .progress-bar--progress {
-  transition: all 150ms ease-out;
+  transition: all 150ms ease-out !important;
 }
 
 .new-task-btn:hover {
   background: transparent !important;
-  color: white;
+  color: white !important;
 }
 
 .fullwidth-task-list {
-  display: flex;
-  flex-wrap: wrap;
+  display: flex !important;
+  flex-wrap: wrap !important;
 }
 .fullwidth-task-list .task-list-item {
-  flex: 0 0 33.33%;
-  opacity: 1;
-  align-self: baseline;
+  flex: 0 0 33.33% !important;
+  opacity: 1 !important;
+  align-self: baseline !important;
 }
 
 .task-list-item {
-  opacity: 0.5;
+  opacity: 0.5 !important
 }
 .task-list-item > div > div {
-  cursor: pointer
+  cursor: pointer !important
 }
 .task-list-item:hover,
 .task-list-item.selected {
-  background: #F6F8FA;
-  opacity: 1;
+  background: #F6F8FA !important;
+  opacity: 1 !important;
 }
 
 .task-card--submenu {
   opacity: 0 !important;
-  transform: rotate(-90deg)
+  transform: rotate(-90deg) !important
 }
 .task-list-item:hover .task-card--submenu { opacity: 1 !important }
 .task-list-item:hover .task-card--submenu[disabled] { opacity: 0.5 !important }
 .task-card--submenu[disabled]{ background: none !important }
 
 .badge {
-  padding: 6px 12px;
-  font-size: 12px;
-  margin-right: 16px;
-  float: left;
-  background: rgba(64,153,255,1);
-  border-radius: 4px;
-  display: inline-block;
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+  margin-right: 16px !important;
+  float: left !important;
+  background: rgba(64,153,255,1) !important;
+  border-radius: 4px !important;
+  display: inline-block !important;
 }
 .badge-overdue {
-  background: rgba(239,77,77,1);
+  background: rgba(239,77,77,1) !important;
 }
 .badge-completed {
-  background: rgba(71,184,129,1)
+  background: rgba(71,184,129,1) !important
 }
 .badge-cancelled {
-  background: rgba(144,153,159,1)
+  background: rgba(144,153,159,1) !important
 }
 .badge-created {
-  background: #FFD040
+  background: #FFD040 !important
 }
 
-.react-datepicker-wrapper { float: right }
-.due-date-calendar { margin-left: -64px }
-.react-datepicker__input-container { opacity: 0 }
+.react-datepicker-wrapper { float: right !important }
+.due-date-calendar { margin-left: -64px !important }
+.react-datepicker__input-container { opacity: 0 !important }
 .due-date-calendar .react-datepicker__triangle { margin-left: 62px !important }
 
 .task-name--input {
   border: none !important;
   box-shadow: none !important;
-  padding: 0;
-  width: calc(100% - 88px);
-  font-size: 29px;
-  color: #20252A;
-  height: 36px;
-  display: block;
+  padding: 0 !important;
+  width: calc(100% - 88px) !important;
+  font-size: 29px !important;
+  color: #20252A !important;
+  height: 36px !important;
+  display: block !important;
   overflow: visible !important;
-  letter-spacing: -0.2px;
-  font-weight: 700;
+  letter-spacing: -0.2px !important;
+  font-weight: 700 !important;
 }
 .subtask-name--input {
   border: none !important;
   box-shadow: none !important;
-  padding: 0 0 0 8px;
+  padding: 0 0 0 8px !important;
   border-radius: 0 !important;
   border-bottom: 1px solid #D0D6DA !important;
 }
@@ -99,20 +99,20 @@ h2 {
 .task-desc--textarea {
   border: none !important;
   box-shadow: none !important;
-  padding: 0;
-  resize: none;
+  padding: 0 !important;
+  resize: none !important;
 }
 .task-note--textarea {
-  min-height: 60px;
+  min-height: 60px !important;
   border-bottom: 1px solid #D0D6DA !important;
-  border-radius: 0;
+  border-radius: 0 !important
 }
 
 .subtask-checkbox button {
-  opacity: 0;
+  opacity: 0 !important
 }
 .subtask-checkbox:hover button {
-  opacity: 1
+  opacity: 1 !important
 }
 .subtask-item {
   margin: 8px 0 !important
@@ -130,7 +130,7 @@ h2 {
   fill: #4099FF !important;
 }
 .attachment-pill button {
-  margin-top: -1px;
+  margin-top: -1px !important;
   background: none !important;
   border: none !important;
   box-shadow: none !important;
