@@ -482,6 +482,12 @@ class App extends Component {
       })
   }
 
+  _closeTask = () => {
+    this.setState({
+      selectedTask: null
+    })
+  }
+
   render() {
     return (
       <Pane
@@ -596,7 +602,18 @@ class App extends Component {
             }
           </Pane>
 
-          <Pane padding={40} paddingTop={32} paddingBottom={0} background="#f6f8fA" width={"calc(100vw - 578px)"} overflow="scroll">
+          <Pane padding={40} paddingTop={24} paddingBottom={0} background="#f6f8fA" width={"calc(100vw - 578px)"} overflow="scroll">
+
+            <Pane
+              marginBottom={8}
+              display="inline-flex"
+              alignItems="center"
+              style={{ cursor: 'pointer' }}
+              onClick={() => this._closeTask()}>
+              <Icon icon="arrow-left" marginRight={8} size={12} color="#90999F" />
+              <Text size={300} color="#90999F">Close task</Text>
+            </Pane>
+
             {this.state.tasks[this.state.selectedTask].status === 'Created'
               ? <Pane marginBottom={32} display="flex">
                 <Text size={500} color="#20252A">Ready to get started on this task?</Text>
@@ -606,6 +623,7 @@ class App extends Component {
             }
             <Task
               task={this.state.tasks[this.state.selectedTask]}
+              closeTask={this._closeTask}
               taskIndex={this.state.selectedTask}
               toggleSubtask={this._toggleSubtask}
               changeName={this._changeName}
