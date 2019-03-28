@@ -9,6 +9,17 @@ h2 {
   font-weight: 700 !important
 }
 
+.sidebar-progress {
+  margin-top: 24px;
+}
+
+@media (min-height: 700px) {
+  .sidebar-progress {
+    position: absolute;
+    bottom: 24px;
+  }
+}
+
 .progress-bar--progress {
   transition: all 150ms ease-out !important;
 }

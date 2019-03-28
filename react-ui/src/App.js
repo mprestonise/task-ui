@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import update from 'immutability-helper'
-import { Pane, Avatar, Text, Button, Icon, Tooltip, Position, toaster} from 'evergreen-ui'
+import { Pane, Avatar, Text, Strong, Button, Icon, Tooltip, Position, toaster} from 'evergreen-ui'
 import Progress from './Progress'
 import TaskCard from './TaskCard'
 import Task from './Task'
@@ -12,7 +12,8 @@ class App extends Component {
     this.state = {
       tasks: null,
       selectedTask: null,
-      selectedTeam: null,
+      filteredStatus: null,
+      filteredTeam: null,
       fetching: true,
       canCreateNewTask: true,
       overallProgress: 0
@@ -58,6 +59,24 @@ class App extends Component {
     this.setState({
       overallProgress: ((totalCompleted / totalSubtasks)*100).toFixed(0)
     })
+  }
+
+  _filterStatus = (status) => {
+    if(this.state.filteredStatus && this.state.filteredStatus.indexOf(status) !== -1){
+      this.setState({ filteredStatus: null })
+    } else {
+      this.setState({ filteredStatus: status })
+    }
+  }
+  _filterTeam = (team) => {
+    if(this.state.filteredTeam && this.state.filteredTeam.indexOf(team) !== -1){
+      this.setState({ filteredTeam: null })
+    } else {
+      this.setState({ filteredTeam: team })
+    }
+  }
+  _clearTeamFilter = () => {
+    this.setState({ filteredTeam: null })
   }
 
   _createNewTask = () => {
@@ -482,6 +501,35 @@ class App extends Component {
       })
   }
 
+  _markAsOverdue = (taskIndex, taskId) => {
+    toaster.notify('This task is overdue..', { id: 'updatingTask' })
+    this.setState({
+      tasks: update(this.state.tasks, { [taskIndex]: { updated: { $set: new Date() }, was_overdue: { $set: true }, completed_date: { $set: new Date() } } })
+    })
+    fetch(`/api/task/${taskId}/overdue`, {
+      method: 'POST',
+      headers: { 'Content-Type' : 'application/json' }
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`status ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(json => {
+        toaster.success("Task updated. You'll get 'em next time'", { id: 'updatingTask' })
+        this.setState({
+          tasks: json,
+          selectedTask: 0,
+          fetching: false
+        });
+      }).catch(e => {
+        this.setState({
+          fetching: false
+        });
+      })
+  }
+
   _closeTask = () => {
     this.setState({
       selectedTask: null
@@ -527,19 +575,73 @@ class App extends Component {
           </Tooltip>
         </Pane>
 
-        <Pane width={195} padding={24} position="relative" height="100vh" background="white" borderLeft="1px solid #373A40" borderRight="1px solid #D0D6DA">
+        <Pane width={195} padding={24} position="relative" height="100vh" overflow="scroll" background="white" borderLeft="1px solid #373A40" borderRight="1px solid #D0D6DA">
 
           <Pane>
             <Text className="caps-label">Tasks</Text>
-            <Text display="block" marginTop={16} size={300} color={`${this.state.selectedTeam ? '#676f76' : '#20252A'}`}>
-              {this.state.selectedTeam
-                ? <span>All teams</span>
-                : <strong>All teams</strong>
+            <Text display="block" cursor="pointer" onClick={() => this._clearTeamFilter()} marginTop={16} size={300} color="#676f76">
+            {this.state.filteredTeam === null
+              ? <Strong size={300} color="#20252A">All teams</Strong>
+              : <span>All teams</span>
+            }
+            </Text>
+            <Text display="block" cursor="pointer" onClick={() => this._filterTeam('Bear team')} marginTop={16} size={300} color="#676f76">
+              {this.state.filteredTeam === 'Bear team'
+                ? <Strong size={300} color="#20252A">Bear team</Strong>
+                : <span>Bear team</span>
               }
             </Text>
-            <Text display="block" marginTop={16} size={300} color="#676f76">Bear team</Text>
-            <Text display="block" marginTop={16} size={300} color="#676f76">Camel team</Text>
-            <Text display="block" marginTop={16} size={300} color="#676f76">Design</Text>
+            <Text display="block" cursor="pointer" onClick={() => this._filterTeam('Camel team')} marginTop={16} size={300} color="#676f76">
+            {this.state.filteredTeam === 'Camel team'
+              ? <Strong size={300} color="#20252A">Camel team</Strong>
+              : <span>Camel team</span>
+            }
+            </Text>
+            <Text display="block" cursor="pointer" onClick={() => this._filterTeam('Design')} marginTop={16} size={300} color="#676f76">
+            {this.state.filteredTeam === 'Design'
+              ? <Strong size={300} color="#20252A">Design</Strong>
+              : <span>Design</span>
+            }
+            </Text>
+          </Pane>
+
+          <Pane marginTop={48}>
+            <Text className="caps-label">Status</Text>
+            <Pane display="flex" cursor="pointer" onClick={() => this._filterStatus('Created')} alignItems="center" marginTop={16}>
+              <Pane width={8} height={8} marginRight={8} borderRadius={8} background="#FFD040" />
+              {this.state.filteredStatus === 'Created'
+                ? <Text size={300}><Strong size={300} color="#20252A">Created</Strong></Text>
+                : <Text size={300} color="#676f76">Created</Text>
+              }
+            </Pane>
+            <Pane display="flex" cursor="pointer" onClick={() => this._filterStatus('Started')} alignItems="center" marginTop={16}>
+              <Pane width={8} height={8} marginRight={8} borderRadius={8} background="#4099FF" />
+              {this.state.filteredStatus === 'Started'
+                ? <Text size={300}><Strong size={300} color="#20252A">Started</Strong></Text>
+                : <Text size={300} color="#676f76">Started</Text>
+              }
+            </Pane>
+            <Pane display="flex" cursor="pointer" onClick={() => this._filterStatus('Overdue')} alignItems="center" marginTop={16}>
+              <Pane width={8} height={8} marginRight={8} borderRadius={8} background="#EF4D4D" />
+              {this.state.filteredStatus === 'Overdue'
+                ? <Text size={300}><Strong size={300} color="#20252A">Overdue</Strong></Text>
+                : <Text size={300} color="#676f76">Overdue</Text>
+              }
+            </Pane>
+            <Pane display="flex" cursor="pointer" onClick={() => this._filterStatus('Completed')} alignItems="center" marginTop={16}>
+              <Pane width={8} height={8} marginRight={8} borderRadius={8} background="#47B881" />
+              {this.state.filteredStatus === 'Completed'
+                ? <Text size={300}><Strong size={300} color="#20252A">Completed</Strong></Text>
+                : <Text size={300} color="#676f76">Completed</Text>
+              }
+            </Pane>
+            <Pane display="flex" cursor="pointer" onClick={() => this._filterStatus('Cancelled')} alignItems="center" marginTop={16}>
+              <Pane width={8} height={8} marginRight={8} borderRadius={8} background="#90999F" />
+              {this.state.filteredStatus === 'Cancelled'
+                ? <Text size={300}><Strong size={300} color="#20252A">Cancelled</Strong></Text>
+                : <Text size={300} color="#676f76">Cancelled</Text>
+              }
+            </Pane>
           </Pane>
 
           <Pane marginTop={48}>
@@ -550,31 +652,7 @@ class App extends Component {
             <Text display="block" marginTop={16} size={300} color="#676f76">Overdue</Text>
           </Pane>
 
-          <Pane marginTop={48}>
-            <Text className="caps-label">Status</Text>
-            <Pane display="flex" alignItems="center" marginTop={16}>
-              <Pane width={8} height={8} marginRight={8} borderRadius={8} background="#4099FF" />
-              <Text size={300} color="#676f76">Started</Text>
-            </Pane>
-            <Pane display="flex" alignItems="center" marginTop={16}>
-              <Pane width={8} height={8} marginRight={8} borderRadius={8} background="#FFD040" />
-              <Text size={300} color="#676f76">Created</Text>
-            </Pane>
-            <Pane display="flex" alignItems="center" marginTop={16}>
-              <Pane width={8} height={8} marginRight={8} borderRadius={8} background="#EF4D4D" />
-              <Text size={300} color="#676f76">Overdue</Text>
-            </Pane>
-            <Pane display="flex" alignItems="center" marginTop={16}>
-              <Pane width={8} height={8} marginRight={8} borderRadius={8} background="#47B881" />
-              <Text size={300} color="#676f76">Completed</Text>
-            </Pane>
-            <Pane display="flex" alignItems="center" marginTop={16}>
-              <Pane width={8} height={8} marginRight={8} borderRadius={8} background="#90999F" />
-              <Text size={300} color="#676f76">Cancelled</Text>
-            </Pane>
-          </Pane>
-
-          <Pane position="absolute" bottom={24}>
+          <Pane className="sidebar-progress">
             <Progress percent={this.state.overallProgress} />
           </Pane>
         </Pane>
@@ -596,13 +674,66 @@ class App extends Component {
 
             {this.state.tasks && this.state.tasks.length > 0
               ? <Pane height={"calc(100vh - 50px)"} paddingBottom={16} overflow="scroll">
-                {this.state.tasks.map((task,t) => <TaskCard key={t} task={task} taskIndex={t} selectTask={this._selectTask} selectedTask={this.state.selectedTask} selectTeam={this._selectTeam} delete={this._deleteTask} />)}
+                {this.state.tasks.map((task,t) => {
+                  if(this.state.filteredStatus || this.state.filteredTeam){
+                    if(this.state.filteredStatus && this.state.filteredTeam){
+                      if(task.status === this.state.filteredStatus && task.team === this.state.filteredTeam){
+                        return (
+                          <TaskCard
+                            key={t}
+                            task={task}
+                            taskIndex={t}
+                            selectTask={this._selectTask}
+                            selectedTask={this.state.selectedTask}
+                            selectTeam={this._selectTeam}
+                            delete={this._deleteTask} />
+                          )
+                      } else {
+                        return null
+                      }
+                    }
+                    else {
+                      if(task.status === this.state.filteredStatus || task.team === this.state.filteredTeam){
+                        return (
+                          <TaskCard
+                            key={t}
+                            task={task}
+                            taskIndex={t}
+                            selectTask={this._selectTask}
+                            selectedTask={this.state.selectedTask}
+                            selectTeam={this._selectTeam}
+                            delete={this._deleteTask} />
+                          )
+                      }
+                    }
+                    return null
+                  } else {
+                    return (
+                      <TaskCard
+                        key={t}
+                        task={task}
+                        taskIndex={t}
+                        selectTask={this._selectTask}
+                        selectedTask={this.state.selectedTask}
+                        selectTeam={this._selectTeam}
+                        delete={this._deleteTask} />
+                      )
+                  }
+                })}
               </Pane>
               : <Text marginLeft={16} display="inline-block">No tasks found</Text>
             }
           </Pane>
 
           <Pane padding={40} paddingTop={24} paddingBottom={0} background="#f6f8fA" width={"calc(100vw - 578px)"} overflow="scroll">
+
+            {this.state.tasks[this.state.selectedTask].status === 'Created'
+              ? <Pane marginBottom={32} display="flex">
+                <Text size={500} color="#20252A">Ready to get started on this task?</Text>
+                <Button marginTop={-6} marginLeft={16} appearance="primary" intent="none" onClick={() => this._startTask(this.state.selectedTask, this.state.tasks[this.state.selectedTask]._id)}>Start this task</Button>
+              </Pane>
+              : null
+            }
 
             <Pane
               marginBottom={8}
@@ -614,13 +745,6 @@ class App extends Component {
               <Text size={300} color="#90999F">Close task</Text>
             </Pane>
 
-            {this.state.tasks[this.state.selectedTask].status === 'Created'
-              ? <Pane marginBottom={32} display="flex">
-                <Text size={500} color="#20252A">Ready to get started on this task?</Text>
-                <Button marginTop={-6} marginLeft={16} appearance="primary" intent="primary" onClick={() => this._startTask(this.state.selectedTask, this.state.tasks[this.state.selectedTask]._id)}>Start this task</Button>
-              </Pane>
-              : null
-            }
             <Task
               task={this.state.tasks[this.state.selectedTask]}
               closeTask={this._closeTask}
@@ -635,6 +759,7 @@ class App extends Component {
               addAttachment={this._addAttachment}
               removeAttachment={this._removeAttachment}
               addNote={this._addNote}
+              markAsOverdue={this._markAsOverdue}
               cancelTask={this._cancelTask}
               completeTask={this._completeTask}
               delete={this._deleteTask} />
@@ -656,8 +781,53 @@ class App extends Component {
 
             {this.state.tasks && this.state.tasks.length > 0
               ? <Pane className="fullwidth-task-list">
-                {this.state.tasks.map((task,t) => <TaskCard key={t} task={task} taskIndex={t} selectTask={this._selectTask} selectedTask={this.state.selectedTask} selectTeam={this._selectTeam} delete={this._deleteTask} />)}
-              </Pane>
+                {this.state.tasks.map((task,t) => {
+                  if(this.state.filteredStatus || this.state.filteredTeam){
+                    if(this.state.filteredStatus && this.state.filteredTeam){
+                      if(task.status === this.state.filteredStatus && task.team === this.state.filteredTeam){
+                        return (
+                          <TaskCard
+                            key={t}
+                            task={task}
+                            taskIndex={t}
+                            selectTask={this._selectTask}
+                            selectedTask={this.state.selectedTask}
+                            selectTeam={this._selectTeam}
+                            delete={this._deleteTask} />
+                          )
+                      } else {
+                        return null
+                      }
+                    }
+                    else {
+                      if(task.status === this.state.filteredStatus || task.team === this.state.filteredTeam){
+                        return (
+                          <TaskCard
+                            key={t}
+                            task={task}
+                            taskIndex={t}
+                            selectTask={this._selectTask}
+                            selectedTask={this.state.selectedTask}
+                            selectTeam={this._selectTeam}
+                            delete={this._deleteTask} />
+                          )
+                      }
+                    }
+                    return null
+                  } else {
+                    return (
+                      <TaskCard
+                        key={t}
+                        task={task}
+                        taskIndex={t}
+                        selectTask={this._selectTask}
+                        selectedTask={this.state.selectedTask}
+                        selectTeam={this._selectTeam}
+                        delete={this._deleteTask} />
+                      )
+                  }
+                })}
+                </Pane>
               : <Text marginLeft={16} display="inline-block">No tasks found</Text>
             }
 

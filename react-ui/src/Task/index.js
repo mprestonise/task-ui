@@ -82,6 +82,12 @@ class Task extends Component {
         return null
       })
     }
+
+    if(!this.props.task.completed && !this.props.task.status !== 'Created' && this.props.task.status !== 'Cancelled' && !this.props.task.was_overdue && moment(this.props.task.due_date).isBefore(new Date())){
+      console.log('This task is overdue')
+      this.props.markAsOverdue(this.props.taskIndex, this.props.task._id)
+    }
+
     return(
       <Pane background="white" padding={32} paddingBottom={16} borderTopRightRadius={8} borderTopLeftRadius={8}>
 
@@ -89,7 +95,7 @@ class Task extends Component {
           <Pane
             marginRight={16}
             marginTop={-6}
-            className={`badge ${this.props.task.completed ? 'badge-completed' : ''} ${this.props.task.status === 'Cancelled' ? 'badge-cancelled' : ''} ${moment(this.props.task.due_date).isBefore(new Date()) && !this.props.task.completed && this.props.task.status !== 'Cancelled' ? 'badge-overdue' : ''} ${this.props.task.status === 'Created' ? 'badge-created' : ''}`}>
+            className={`badge ${this.props.task.completed ? 'badge-completed' : ''} ${this.props.task.status === 'Cancelled' ? 'badge-cancelled' : ''} ${moment(this.props.task.due_date).isBefore(new Date()) && !this.props.task.completed && this.props.task.status !== 'Cancelled' ? 'badge-overdue' : ''} ${this.props.task.status === 'Created' && !this.props.task.was_overdue ? 'badge-created' : ''}`}>
             {moment(this.props.task.due_date).isBefore(new Date()) && !this.props.task.completed && this.props.task.status !== 'Cancelled'
               ? <Strong color="white">Overdue</Strong>
               : <Text color="white">{this.props.task.status}</Text>
@@ -162,15 +168,18 @@ class Task extends Component {
         <Pane marginTop={40} paddingTop={24} borderTop="1px solid #D0D6DA">
           <Pane size={400} display="block" marginBottom={16} className="clearfix">
             <Text size={400} float="left">Subtasks</Text>
-            <Tooltip content="Add a subtask" position={Position.RIGHT}>
-              <IconButton
-                float="left"
-                height={24}
-                marginTop={-2}
-                marginLeft={8}
-                icon="plus"
-                onClick={() => this.props.newSubtask(this.props.taskIndex)} />
-            </Tooltip>
+            {!this.props.task.completed && this.props.task.status !== 'Cancelled'
+              ? <Tooltip content="Add a subtask" position={Position.RIGHT}>
+                <IconButton
+                  float="left"
+                  height={24}
+                  marginTop={-2}
+                  marginLeft={8}
+                  icon="plus"
+                  onClick={() => this.props.newSubtask(this.props.taskIndex)} />
+              </Tooltip>
+              : null
+            }
           </Pane>
           {this.props.task.subtasks && this.props.task.subtasks.length === 0
             ? <Text display="block" size={300} color="#90999F">You haven't added any subtasks yet</Text>
@@ -203,15 +212,18 @@ class Task extends Component {
         <Pane marginTop={40} paddingTop={24} borderTop="1px solid #D0D6DA">
         <Pane size={400} display="block" marginBottom={16} className="clearfix">
           <Text size={400} float="left">Attachments</Text>
-          <Tooltip content="Add an attachment" position={Position.RIGHT}>
-            <IconButton
-              float="left"
-              height={24}
-              marginTop={-2}
-              marginLeft={8}
-              icon="plus"
-              onClick={() => this.setState({ addingAttachment: true })} />
-          </Tooltip>
+          {!this.props.task.completed && this.props.task.status !== 'Cancelled'
+            ? <Tooltip content="Add an attachment" position={Position.RIGHT}>
+              <IconButton
+                float="left"
+                height={24}
+                marginTop={-2}
+                marginLeft={8}
+                icon="plus"
+                onClick={() => this.setState({ addingAttachment: true })} />
+            </Tooltip>
+            : null
+          }
         </Pane>
           {this.props.task.attachments && !this.state.addingAttachment && this.props.task.attachments.length === 0
             ? <Text display="block" size={300} color="#90999F">You haven't added any attachments yet</Text>

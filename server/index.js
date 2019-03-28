@@ -359,6 +359,31 @@ if (cluster.isMaster) {
     })
   });
 
+  app.post('/api/task/:id/overdue', function (req, res) {
+    res.set('Content-Type', 'application/json');
+    // connect to Mongo
+    MongoClient.connect(mongoURL, { useNewUrlParser: true }, function(err, client) {
+
+      // check for errors
+      if (!err) {}
+
+      // get db cursor
+      const db = client.db(dbName);
+      const tasks = db.collection('tasks');
+
+      tasks.findOneAndUpdate( { _id : ObjectId(req.params.id) },
+      {
+        $set: { was_overdue: true, updated: new Date() }
+      })
+
+      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+        if(err) { reject(err) } else {
+          res.json(items);
+        }
+      })
+    })
+  });
+
   app.post('/api/task/:id/cancelled', function (req, res) {
     res.set('Content-Type', 'application/json');
     // connect to Mongo
