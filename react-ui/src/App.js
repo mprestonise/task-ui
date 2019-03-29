@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import update from 'immutability-helper'
+import moment from 'moment'
 import { Pane, Avatar, Text, Strong, Button, Icon, Tooltip, Position, toaster} from 'evergreen-ui'
 import Progress from './Progress'
 import TaskCard from './TaskCard'
@@ -14,6 +15,7 @@ class App extends Component {
       selectedTask: null,
       filteredStatus: null,
       filteredTeam: null,
+      dueToday: 0,
       fetching: true,
       canCreateNewTask: true,
       overallProgress: 0
@@ -32,6 +34,7 @@ class App extends Component {
       .then(json => {
         toaster.closeAll()
         this._calculateProgress(json)
+        this._dueToday(json)
         this.setState({
           tasks: json,
           fetching: false
@@ -59,6 +62,17 @@ class App extends Component {
     this.setState({
       overallProgress: ((totalCompleted / totalSubtasks)*100).toFixed(0)
     })
+  }
+
+  _dueToday = (tasks) => {
+    let totalDue = 0
+    tasks.map((task) => {
+      if(moment(task.due_date).isSame(new Date(), 'day')){
+        return totalDue++
+      }
+      return null
+    })
+    this.setState({ dueToday: totalDue })
   }
 
   _filterStatus = (status) => {
@@ -188,6 +202,7 @@ class App extends Component {
       })
       .then(json => {
         toaster.success('Task updated', { id: 'updatingTask' })
+        this._dueToday(json)
         this.setState({
           tasks: json,
           selectedTask: 0,
@@ -646,7 +661,13 @@ class App extends Component {
 
           <Pane marginTop={48}>
             <Text className="caps-label">Timelines</Text>
-            <Text display="block" marginTop={16} size={300} color="#676f76">Due today</Text>
+            <Text className="clearfix" display="block" marginTop={16} size={300} color="#676f76">
+              Due today
+              {this.state.dueToday > 0
+                ? <span className="pill">{this.state.dueToday}</span>
+                : null
+              }
+            </Text>
             <Text display="block" marginTop={16} size={300} color="#676f76">Due this week</Text>
             <Text display="block" marginTop={16} size={300} color="#676f76">Newest</Text>
             <Text display="block" marginTop={16} size={300} color="#676f76">Overdue</Text>
