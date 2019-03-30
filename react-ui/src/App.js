@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import update from 'immutability-helper'
 import moment from 'moment'
+import { HotKeys } from 'react-hotkeys'
 import { Pane, Avatar, Text, Strong, Button, Icon, Tooltip, Position, toaster} from 'evergreen-ui'
 import Progress from './Progress'
 import TaskCard from './TaskCard'
@@ -11,11 +12,14 @@ class App extends Component {
   constructor(props) {
     super(props)
     this.state = {
+      allTasks: null,
       tasks: null,
       selectedTask: null,
       filteredStatus: null,
       filteredTeam: null,
+      filteredDate: null,
       dueToday: 0,
+      dueThisWeek: 0,
       fetching: true,
       canCreateNewTask: true,
       overallProgress: 0
@@ -35,7 +39,9 @@ class App extends Component {
         toaster.closeAll()
         this._calculateProgress(json)
         this._dueToday(json)
+        this._dueThisWeek(json)
         this.setState({
+          allTasks: json,
           tasks: json,
           fetching: false
         });
@@ -44,6 +50,14 @@ class App extends Component {
           fetching: false
         });
       })
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    console.log('what is prev?', prevState)
+    console.log('what is next?', this.state)
+    if(prevState.filteredTeam !== this.state.filteredTeam || prevState.filteredStatus !== this.state.filteredStatus || prevState.filteredDate !== this.state.filteredDate){
+      this._filterTasks()
+    }
   }
 
   _calculateProgress = (tasks) => {
@@ -67,7 +81,7 @@ class App extends Component {
   _dueToday = (tasks) => {
     let totalDue = 0
     tasks.map((task) => {
-      if(moment(task.due_date).isSame(new Date(), 'day')){
+      if(moment(task.due_date).isSame(new Date(), 'day') && task.status !== 'Cancelled' && !task.completed){
         return totalDue++
       }
       return null
@@ -75,22 +89,67 @@ class App extends Component {
     this.setState({ dueToday: totalDue })
   }
 
-  _filterStatus = (status) => {
-    if(this.state.filteredStatus && this.state.filteredStatus.indexOf(status) !== -1){
-      this.setState({ filteredStatus: null })
-    } else {
-      this.setState({ filteredStatus: status })
-    }
+  _dueThisWeek = (tasks) => {
+    let totalDue = 0
+    const sevenDaysAhead = moment(new Date()).add(7, 'days')
+    tasks.map((task) => {
+      if(moment(task.due_date).isBetween(new Date(), sevenDaysAhead) && task.status !== 'Cancelled' && !task.completed){
+        return totalDue++
+      }
+      return null
+    })
+    this.setState({ dueThisWeek: totalDue })
   }
+
   _filterTeam = (team) => {
     if(this.state.filteredTeam && this.state.filteredTeam.indexOf(team) !== -1){
-      this.setState({ filteredTeam: null })
+      this._clearFilter('team')
     } else {
       this.setState({ filteredTeam: team })
     }
   }
-  _clearTeamFilter = () => {
-    this.setState({ filteredTeam: null })
+  _filterStatus = (status) => {
+    if(this.state.filteredStatus && this.state.filteredStatus.indexOf(status) !== -1){
+      this._clearFilter('status')
+    } else {
+      this.setState({ filteredStatus: status })
+    }
+  }
+  _filterDate = (range) => {
+    if(this.state.filteredDate && this.state.filteredDate.indexOf(range) !== -1){
+      this._clearFilter('date')
+    } else {
+      this.setState({ filteredDate: range })
+    }
+  }
+
+  _filterTasks = () => {
+    let filteredTasks = this.state.allTasks
+    if(filteredTasks.length > 0 && this.state.filteredTeam){ filteredTasks = filteredTasks.filter(task => task.team === this.state.filteredTeam) }
+    if(filteredTasks.length > 0 && this.state.filteredStatus){ filteredTasks = filteredTasks.filter(task => task.status === this.state.filteredStatus) }
+    if(filteredTasks.length > 0 && this.state.filteredDate){
+      const today = new Date()
+      const sevenDaysAhead = moment(new Date()).add(7, 'days')
+      if(this.state.filteredDate === 'overdue') { filteredTasks = filteredTasks.filter(task => moment(task.due_date).isBefore(today) && task.status !== 'Cancelled' && !task.completed) }
+      if(this.state.filteredDate === 'today') { filteredTasks = filteredTasks.filter(task => moment(task.due_date).isSame(new Date(), 'day') && task.status !== 'Cancelled' && !task.completed) }
+      if(this.state.filteredDate === 'week') { filteredTasks = filteredTasks.filter(task => moment(task.due_date).isBetween(new Date(), sevenDaysAhead) && task.status !== 'Cancelled' && !task.completed) }
+    }
+    this.setState({
+      tasks: filteredTasks
+    })
+  }
+
+  _clearFilter = (filter) => {
+    if(filter === 'team') { this.setState({ filteredTeam: null }) }
+    if(filter === 'status') { this.setState({ filteredStatus: null }) }
+    if(filter === 'date') { this.setState({ filteredDate: null }) }
+  }
+  _clearFilters = () => {
+    this.setState({
+      filteredTeam: null,
+      filteredStatus: null,
+      filteredDate: null
+    })
   }
 
   _createNewTask = () => {
@@ -110,6 +169,7 @@ class App extends Component {
         toaster.success('New task created successfully', { id: 'createNewTask' })
         this._calculateProgress(json)
         this.setState({
+          allTasks: json,
           tasks: json,
           canCreateNewTask: true,
           selectedTask: 0,
@@ -138,6 +198,7 @@ class App extends Component {
         toaster.success('Task deleted', { id: 'deleteNewTask' })
         this._calculateProgress(json)
         this.setState({
+          allTasks: json,
           tasks: json,
           selectedTask: 0,
           fetching: false
@@ -172,6 +233,7 @@ class App extends Component {
           toaster.success('Task updated', { id: 'updatingTask' })
           this._calculateProgress(json)
           this.setState({
+            allTasks: json,
             tasks: json,
             selectedTask: 0,
             fetching: false
@@ -203,7 +265,9 @@ class App extends Component {
       .then(json => {
         toaster.success('Task updated', { id: 'updatingTask' })
         this._dueToday(json)
+        this._dueThisWeek(json)
         this.setState({
+          allTasks: json,
           tasks: json,
           selectedTask: 0,
           fetching: false
@@ -234,6 +298,7 @@ class App extends Component {
       .then(json => {
         toaster.success('Task updated', { id: 'updatingTask' })
         this.setState({
+          allTasks: json,
           tasks: json,
           selectedTask: 0,
           fetching: false
@@ -264,6 +329,7 @@ class App extends Component {
       .then(json => {
         toaster.success('Task updated', { id: 'updatingTask' })
         this.setState({
+          allTasks: json,
           tasks: json,
           selectedTask: 0,
           fetching: false
@@ -307,6 +373,7 @@ class App extends Component {
         toaster.success('Task updated', { id: 'updatingTask' })
         this._calculateProgress(json)
         this.setState({
+          allTasks: json,
           tasks: json,
           selectedTask: 0,
           fetching: false
@@ -337,6 +404,7 @@ class App extends Component {
       .then(json => {
         toaster.success('Task updated', { id: 'updatingTask' })
         this.setState({
+          allTasks: json,
           tasks: json,
           selectedTask: 0,
           fetching: false
@@ -364,6 +432,7 @@ class App extends Component {
       .then(json => {
         toaster.success('Attachment.. attached!', { id: 'updatingTask' })
         this.setState({
+          allTasks: json,
           tasks: json,
           selectedTask: 0,
           fetching: false
@@ -391,6 +460,7 @@ class App extends Component {
       .then(json => {
         toaster.success('Bye, attachment..', { id: 'updatingTask' })
         this.setState({
+          allTasks: json,
           tasks: json,
           selectedTask: 0,
           fetching: false
@@ -418,6 +488,7 @@ class App extends Component {
       .then(json => {
         toaster.success('Note added', { id: 'updatingTask' })
         this.setState({
+          allTasks: json,
           tasks: json,
           selectedTask: 0,
           fetching: false
@@ -447,6 +518,7 @@ class App extends Component {
       .then(json => {
         window.setTimeout(() => { toaster.success("Task started! Go get 'em!!", { id: 'updatingTask' }) }, 750)
         this.setState({
+          allTasks: json,
           tasks: json,
           selectedTask: 0,
           fetching: false
@@ -476,6 +548,7 @@ class App extends Component {
       .then(json => {
         toaster.success('Task cancelled', { id: 'updatingTask' })
         this.setState({
+          allTasks: json,
           tasks: json,
           selectedTask: 0,
           fetching: false
@@ -505,6 +578,7 @@ class App extends Component {
       .then(json => {
         toaster.success('Task completed! Good job!!', { id: 'updatingTask' })
         this.setState({
+          allTasks: json,
           tasks: json,
           selectedTask: 0,
           fetching: false
@@ -534,6 +608,7 @@ class App extends Component {
       .then(json => {
         toaster.success("Task updated. You'll get 'em next time'", { id: 'updatingTask' })
         this.setState({
+          allTasks: json,
           tasks: json,
           selectedTask: 0,
           fetching: false
@@ -552,7 +627,17 @@ class App extends Component {
   }
 
   render() {
-    return (
+    const map = {
+      'newTask': 'command+option+1',
+      'closeTask': 'command+option+2',
+      'clearFilters': 'command+option+3'
+    }
+    const handlers = {
+      'newTask': () => this._createNewTask(),
+      'closeTask': () => this._closeTask(),
+      'clearFilters': () => this._clearFilters()
+    }
+    return (<HotKeys keyMap={map} handlers={handlers}>
       <Pane
         className="wrapper"
         display="flex"
@@ -562,6 +647,7 @@ class App extends Component {
         <Pane
           width={64}
           height="100vh"
+          position="relative"
           background="#20252A">
           <Tooltip content="Michael Prestonise" position={Position.RIGHT}>
           <Avatar
@@ -588,13 +674,31 @@ class App extends Component {
               <Icon size={24} marginLeft={8} icon="plus" />
             </Button>
           </Tooltip>
+          <Tooltip content={
+              <Pane background="white" padding={8} paddingTop={12}>
+                <Text display="block" marginBottom={8} size={300} color="#90999F"><Strong display="inline-block" width={96} size={300} color="#20252A">New task</Strong> <span style={{ textAlign: 'right' }}>Cmd+Alt+1</span></Text>
+                <Text display="block" marginBottom={8} size={300} color="#90999F"><Strong display="inline-block" width={96} size={300} color="#20252A">Close task</Strong> <span style={{ textAlign: 'right' }}>Cmd+Alt+2</span></Text>
+                <Text display="block" size={300} color="#90999F"><Strong display="inline-block" width={96} size={300} color="#20252A">Clear filters</Strong> <span style={{ textAlign: 'right' }}>Cmd+Alt+3</span></Text>
+              </Pane>
+            }
+            appearance="card"
+            position={Position.RIGHT}>
+          <Icon
+            position="absolute"
+            left={20}
+            bottom={32}
+            icon="help"
+            size={24}
+            color="#90999F"
+          />
+          </Tooltip>
         </Pane>
 
         <Pane width={195} padding={24} position="relative" height="100vh" overflow="scroll" background="white" borderLeft="1px solid #373A40" borderRight="1px solid #D0D6DA">
 
           <Pane>
             <Text className="caps-label">Tasks</Text>
-            <Text display="block" cursor="pointer" onClick={() => this._clearTeamFilter()} marginTop={16} size={300} color="#676f76">
+            <Text display="block" cursor="pointer" onClick={() => this._clearFilter('team')} marginTop={16} size={300} color="#676f76">
             {this.state.filteredTeam === null
               ? <Strong size={300} color="#20252A">All teams</Strong>
               : <span>All teams</span>
@@ -661,16 +765,36 @@ class App extends Component {
 
           <Pane marginTop={48}>
             <Text className="caps-label">Timelines</Text>
-            <Text className="clearfix" display="block" marginTop={16} size={300} color="#676f76">
-              Due today
+            <Text className="clearfix" display="block" cursor="pointer" onClick={() => this._filterDate('overdue')} marginTop={16} size={300} color="#676f76">
+              {this.state.filteredDate === 'overdue'
+                ? <Strong size={300} color="#20252A">Overdue</Strong>
+                : <span>Overdue</span>
+              }
+              {this.state.overdue > 0
+                ? <span className="pill">{this.state.overdue}</span>
+                : null
+              }
+            </Text>
+            <Text className="clearfix" display="block" cursor="pointer" onClick={() => this._filterDate('today')} marginTop={16} size={300} color="#676f76">
+              {this.state.filteredDate === 'today'
+                ? <Strong size={300} color="#20252A">Due today</Strong>
+                : <span>Due today</span>
+              }
               {this.state.dueToday > 0
                 ? <span className="pill">{this.state.dueToday}</span>
                 : null
               }
             </Text>
-            <Text display="block" marginTop={16} size={300} color="#676f76">Due this week</Text>
-            <Text display="block" marginTop={16} size={300} color="#676f76">Newest</Text>
-            <Text display="block" marginTop={16} size={300} color="#676f76">Overdue</Text>
+            <Text className="clearfix" display="block" cursor="pointer" onClick={() => this._filterDate('week')} marginTop={16} size={300} color="#676f76">
+              {this.state.filteredDate === 'week'
+                ? <Strong size={300} color="#20252A">Due this week</Strong>
+                : <span>Due this week</span>
+              }
+              {this.state.dueThisWeek > 0
+                ? <span className="pill">{this.state.dueThisWeek}</span>
+                : null
+              }
+            </Text>
           </Pane>
 
           <Pane className="sidebar-progress">
@@ -683,7 +807,7 @@ class App extends Component {
 
           <Pane width={320} padding={24} paddingLeft={0} paddingRight={0} height="100vh" background="white" borderRight="1px solid #D0D6DA">
             <Pane className="clearfix" marginLeft={16} marginRight={16} marginBottom={8}>
-              <Text size={400}><strong>All teams</strong></Text>
+              <Text size={400}><strong>{`${this.state.filteredTeam ? this.state.filteredTeam : 'All teams' }`}</strong></Text>
               <Button
                 float="right"
                 marginTop={-6}
@@ -696,51 +820,17 @@ class App extends Component {
             {this.state.tasks && this.state.tasks.length > 0
               ? <Pane height={"calc(100vh - 50px)"} paddingBottom={16} overflow="scroll">
                 {this.state.tasks.map((task,t) => {
-                  if(this.state.filteredStatus || this.state.filteredTeam){
-                    if(this.state.filteredStatus && this.state.filteredTeam){
-                      if(task.status === this.state.filteredStatus && task.team === this.state.filteredTeam){
-                        return (
-                          <TaskCard
-                            key={t}
-                            task={task}
-                            taskIndex={t}
-                            selectTask={this._selectTask}
-                            selectedTask={this.state.selectedTask}
-                            selectTeam={this._selectTeam}
-                            delete={this._deleteTask} />
-                          )
-                      } else {
-                        return null
-                      }
-                    }
-                    else {
-                      if(task.status === this.state.filteredStatus || task.team === this.state.filteredTeam){
-                        return (
-                          <TaskCard
-                            key={t}
-                            task={task}
-                            taskIndex={t}
-                            selectTask={this._selectTask}
-                            selectedTask={this.state.selectedTask}
-                            selectTeam={this._selectTeam}
-                            delete={this._deleteTask} />
-                          )
-                      }
-                    }
-                    return null
-                  } else {
-                    return (
-                      <TaskCard
-                        key={t}
-                        task={task}
-                        taskIndex={t}
-                        selectTask={this._selectTask}
-                        selectedTask={this.state.selectedTask}
-                        selectTeam={this._selectTeam}
-                        delete={this._deleteTask} />
-                      )
-                  }
-                })}
+                  return (
+                    <TaskCard
+                      key={t}
+                      task={task}
+                      taskIndex={t}
+                      selectTask={this._selectTask}
+                      selectedTask={this.state.selectedTask}
+                      selectTeam={this._selectTeam}
+                      delete={this._deleteTask} />
+                  )}
+                )}
               </Pane>
               : <Text marginLeft={16} display="inline-block">No tasks found</Text>
             }
@@ -790,7 +880,7 @@ class App extends Component {
           : <Pane padding={24} width="100%" maxWidth={900} marginLeft="auto" marginRight="auto">
 
             <Pane className="clearfix" marginLeft={16} marginRight={16} marginBottom={16}>
-              <Text size={400} color="#20252A"><strong>All teams</strong></Text>
+              <Text size={400} color="#20252A"><strong>{`${this.state.filteredTeam ? this.state.filteredTeam : 'All teams' }`}</strong></Text>
               <Button
                 float="right"
                 marginTop={-6}
@@ -803,51 +893,17 @@ class App extends Component {
             {this.state.tasks && this.state.tasks.length > 0
               ? <Pane className="fullwidth-task-list">
                 {this.state.tasks.map((task,t) => {
-                  if(this.state.filteredStatus || this.state.filteredTeam){
-                    if(this.state.filteredStatus && this.state.filteredTeam){
-                      if(task.status === this.state.filteredStatus && task.team === this.state.filteredTeam){
-                        return (
-                          <TaskCard
-                            key={t}
-                            task={task}
-                            taskIndex={t}
-                            selectTask={this._selectTask}
-                            selectedTask={this.state.selectedTask}
-                            selectTeam={this._selectTeam}
-                            delete={this._deleteTask} />
-                          )
-                      } else {
-                        return null
-                      }
-                    }
-                    else {
-                      if(task.status === this.state.filteredStatus || task.team === this.state.filteredTeam){
-                        return (
-                          <TaskCard
-                            key={t}
-                            task={task}
-                            taskIndex={t}
-                            selectTask={this._selectTask}
-                            selectedTask={this.state.selectedTask}
-                            selectTeam={this._selectTeam}
-                            delete={this._deleteTask} />
-                          )
-                      }
-                    }
-                    return null
-                  } else {
-                    return (
-                      <TaskCard
-                        key={t}
-                        task={task}
-                        taskIndex={t}
-                        selectTask={this._selectTask}
-                        selectedTask={this.state.selectedTask}
-                        selectTeam={this._selectTeam}
-                        delete={this._deleteTask} />
-                      )
-                  }
-                })}
+                  return (
+                    <TaskCard
+                      key={t}
+                      task={task}
+                      taskIndex={t}
+                      selectTask={this._selectTask}
+                      selectedTask={this.state.selectedTask}
+                      selectTeam={this._selectTeam}
+                      delete={this._deleteTask} />
+                  )}
+                )}
                 </Pane>
               : <Text marginLeft={16} display="inline-block">No tasks found</Text>
             }
@@ -856,7 +912,7 @@ class App extends Component {
         }
 
       </Pane>
-    );
+    </HotKeys>);
   }
 }
 

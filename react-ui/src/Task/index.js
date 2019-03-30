@@ -84,7 +84,6 @@ class Task extends Component {
     }
 
     if(!this.props.task.completed && !this.props.task.status !== 'Created' && this.props.task.status !== 'Cancelled' && !this.props.task.was_overdue && moment(this.props.task.due_date).isBefore(new Date())){
-      console.log('This task is overdue')
       this.props.markAsOverdue(this.props.taskIndex, this.props.task._id)
     }
 
