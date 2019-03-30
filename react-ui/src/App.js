@@ -53,8 +53,6 @@ class App extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    console.log('what is prev?', prevState)
-    console.log('what is next?', this.state)
     if(prevState.filteredTeam !== this.state.filteredTeam || prevState.filteredStatus !== this.state.filteredStatus || prevState.filteredDate !== this.state.filteredDate){
       this._filterTasks()
     }
@@ -416,6 +414,48 @@ class App extends Component {
       })
   }
 
+  _addArtifact = (taskIndex, artifact, taskId) => {
+    let data = new FormData()
+    data.append('file', artifact[0])
+    toaster.notify('Uploading..', { id: 'updatingTask' })
+    fetch(`/api/task/${taskId}/addArtifact/sign-s3?fileName=${artifact[0].name}&fileType=${artifact[0].type}`, {
+      method: 'POST',
+      body: data
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`status ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(json => {
+        this._uploadFile(artifact[0], json.signedUrl, json.url).then(() => {
+          toaster.success('Artifact uploaded successfully', { id: 'updatingTask' })
+          this.setState({
+            allTasks: json.tasks,
+            tasks: json.tasks,
+            selectedTask: 0,
+            fetching: false
+          });
+        })
+      }).catch(e => {
+        this.setState({
+          fetching: false
+        });
+      })
+  }
+
+  _uploadFile = (file, signedRequest, url) => {
+    const options = {
+      method: 'PUT',
+      body: file
+    };
+    return fetch(signedRequest, options)
+      .then(response => {
+        if (!response.ok) { throw new Error(`${response.status}: ${response.statusText}`); }
+      });
+  }
+
   _addAttachment = (taskIndex, attachment, taskId) => {
     toaster.notify('Attaching..', { id: 'updatingTask' })
     fetch(`/api/task/${taskId}/addAttachment`, {
@@ -658,7 +698,7 @@ class App extends Component {
             marginLeft={12}
           />
           </Tooltip>
-          <Tooltip content="Create a new task" position={Position.RIGHT}>
+          <Tooltip content="Create a new task (Cmd+Alt+1)" position={Position.RIGHT}>
             <Button
               appearance="minimal"
               intent="none"
@@ -867,6 +907,7 @@ class App extends Component {
               changeDueDate={this._changeDueDate}
               newSubtask={this._newSubtask}
               updateSubtask={this._updateSubtask}
+              addArtifact={this._addArtifact}
               addAttachment={this._addAttachment}
               removeAttachment={this._removeAttachment}
               addNote={this._addNote}

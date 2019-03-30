@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import moment from 'moment'
-import { Avatar, Pane, Heading, Text, TextInput, Textarea, Strong, IconButton, Button, Tooltip, Position } from 'evergreen-ui'
+import { Avatar, Pane, Heading, Text, TextInput, Textarea, FilePicker, Strong, IconButton, Button, Tooltip, Position } from 'evergreen-ui'
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import Progress from '../Progress'
@@ -18,6 +18,7 @@ class Task extends Component {
       editingSubtask: false,
       addingNewSubtask: false,
       newSubtask: null,
+      addingArtifact: false,
       addingAttachment: false,
       newAttachmentURL: null,
       newAttachmentLabel: null,
@@ -66,6 +67,10 @@ class Task extends Component {
       newAttachmentURL: null,
       newAttachmentLabel: null
     })
+  }
+
+  _addArtifact = (files) => {
+    this.props.addArtifact(this.props.taskIndex, files, this.props.task._id)
   }
 
   _openAttachment = (url) => {
@@ -199,13 +204,19 @@ class Task extends Component {
 
         <Pane marginTop={40} paddingTop={24} borderTop="1px solid #D0D6DA">
           <Text size={400} display="block" marginBottom={16}>Artifacts</Text>
+          <FilePicker
+            width={320}
+            marginBottom={32}
+            onChange={files => this._addArtifact(files)} />
           {this.props.task.artifacts && this.props.task.artifacts.length === 0
             ? <Text display="block" size={300} color="#90999F">You haven't added any artifacts yet</Text>
             : null
           }
-          {this.props.task.artifacts.map((artifact,a) => <Pane key={a}>
-            <img alt={`Added ${moment(artifact.added).format('DD MMMM YYYY')}`} style={{ borderRadius: '4px' }} height="64" src={artifact.url} title={moment(artifact.added).format('DD MMMM YYYY')} />
-          </Pane>)}
+          <Pane display="flex">
+            {this.props.task.artifacts.map((artifact,a) => <Pane key={a} marginRight={8}>
+              <img alt={`Added ${moment(artifact.added).format('DD MMMM YYYY')}`} style={{ borderRadius: '4px' }} height="64" src={artifact.url} title={moment(artifact.added).format('DD MMMM YYYY')} />
+            </Pane>)}
+          </Pane>
         </Pane>
 
         <Pane marginTop={40} paddingTop={24} borderTop="1px solid #D0D6DA">

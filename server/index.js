@@ -3,8 +3,10 @@ require('dotenv').config()
 const express = require('express')
 const path = require('path')
 const bodyParser = require('body-parser')
+const formData = require('express-form-data')
 const MongoClient = require('mongodb').MongoClient;
 const ObjectId = require('mongodb').ObjectID;
+const aws = require('aws-sdk');
 const moment = require('moment');
 const cluster = require('cluster')
 const numCPUs = require('os').cpus().length
@@ -13,6 +15,14 @@ const PORT = process.env.PORT || 5000
 
 const mongoURL = process.env.MONGODB_URI
 const dbName = process.env.MONGODB_NAME
+
+const s3 = new aws.S3();
+aws.config.update({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: 'eu-west-2',
+});
+const S3_BUCKET = process.env.S3_BUCKET;
 
 // Multi-process to utilize all CPU cores.
 if (cluster.isMaster) {
@@ -35,6 +45,8 @@ if (cluster.isMaster) {
 
   app.use(bodyParser.json({limit: '50mb'}));
   app.use(bodyParser.urlencoded({ extended: true, limit: '50mb'}));
+
+  app.use(formData.parse())
 
   // Answer API requests.
   app.get('/api', function (req, res) {
@@ -224,6 +236,58 @@ if (cluster.isMaster) {
         }
       })
     })
+  });
+
+  app.post('/api/task/:id/addArtifact/sign-s3', (req, res) => {
+    res.set('Content-Type', 'application/json');
+    const { fileName, fileType } = req.query;
+    const s3 = new aws.S3({signatureVersion: 'v4'});
+
+    console.log('what does the API receive?', req.params.name)
+
+    let s3Params = {
+      Bucket: S3_BUCKET,
+      Key: fileName,
+      Expires: 60,
+      ContentType: fileType,
+      ACL: 'public-read'
+    }
+
+    s3.getSignedUrl('putObject', s3Params, (err, data) => {
+      if(err){ console.log(err); return res.end(); }
+      let returnData = {
+        signedRequest: data,
+        url: `https://${S3_BUCKET}.s3.amazonaws.com/${fileName}`
+      }
+      // connect to Mongo
+      MongoClient.connect(mongoURL, { useNewUrlParser: true }, function(err, client) {
+
+        // check for errors
+        if (!err) {}
+
+        // get db cursor
+        const db = client.db(dbName);
+        const tasks = db.collection('tasks');
+
+        const newArtifact = {
+          added: new Date(),
+          url: returnData.url
+        }
+
+        tasks.findOneAndUpdate( { _id : ObjectId(req.params.id) },
+        {
+          $push: { artifacts: { $each: [newArtifact], $position: 0 } },
+          $set: { updated: new Date() }
+        })
+
+        tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+          if(err) { reject(err) } else {
+            res.json({ tasks: items, signedUrl: returnData.signedRequest, url: returnData.url });
+          }
+        })
+      })
+    })
+
   });
 
   app.post('/api/task/:id/addAttachment', function (req, res) {
