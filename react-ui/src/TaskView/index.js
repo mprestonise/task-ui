@@ -26,8 +26,6 @@ class TaskView extends Component {
         return response.json();
       })
       .then(json => {
-        console.log('what exactly is returned?', json)
-        console.log(typeof json)
         toaster.closeAll()
         this._calculateProgress(json)
         this.setState({
@@ -140,7 +138,7 @@ class TaskView extends Component {
               disabled={true}
               checked={subtask.completed}
               taskIndex={this.props.taskIndex}
-              taskId={this.props.task._id}
+              taskId={this.state.task._id}
               updateSubtask={null}
               index={t}
               toggle={null}
