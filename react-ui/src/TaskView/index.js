@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import moment from 'moment'
-import { Avatar, Pane, Heading, Text, FilePicker, Strong, IconButton, Button, toaster } from 'evergreen-ui'
+import { Avatar, Pane, Heading, Text, Strong, IconButton, Button, toaster } from 'evergreen-ui'
 import Progress from '../Progress'
 import Subtask from '../Subtask'
 
@@ -148,10 +148,6 @@ class TaskView extends Component {
 
         <Pane marginTop={40} paddingTop={24} borderTop="1px solid #D0D6DA">
           <Text size={400} display="block" marginBottom={16}>Artifacts</Text>
-          <FilePicker
-            width={320}
-            marginBottom={32}
-            onChange={files => this._addArtifact(files)} />
           {this.state.task.artifacts && this.state.task.artifacts.length === 0
             ? <Text display="block" size={300} color="#90999F">No artifacts have been added</Text>
             : null
@@ -180,7 +176,7 @@ class TaskView extends Component {
         <Pane marginTop={40} paddingBottom={16} paddingTop={24} borderTop="1px solid #D0D6DA">
           <Text size={400} display="block" marginBottom={16}>Notes</Text>
 
-          <Pane marginTop={40}>
+          <Pane>
             {this.state.task.notes && this.state.task.notes.length === 0
               ? <Text display="block" size={300} color="#90999F">No notes have been added</Text>
               : null

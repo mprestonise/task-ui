@@ -35,7 +35,10 @@ class Subtask extends Component {
         </Pane>
         : <Pane display="flex" className="subtask-checkbox">
           <Checkbox className="subtask-item" disabled={this.props.disabled} checked={this.props.checked} onChange={(e) => this.props.toggle(this.props.taskIndex, e.target.checked, this.props.index, this.props.taskId)} label={this.props.label} />
-          <IconButton height={24} icon="edit" appearance="minimal" intent="none" marginTop={3} marginLeft={16} onClick={() => this.setState({ editingSubtask: true, newSubtask: null })} />
+          {!this.props.disabled
+            ? <IconButton disabled={this.props.disabled} height={24} icon="edit" appearance="minimal" intent="none" marginTop={3} marginLeft={16} onClick={() => this.setState({ editingSubtask: true, newSubtask: null })} />
+            : null
+          }
         </Pane>
       }
     </Pane>);
