@@ -74,6 +74,26 @@ if (cluster.isMaster) {
     })
   });
 
+  app.get('/api/task/:id', function (req, res) {
+    res.set('Content-Type', 'application/json');
+    // connect to Mongo
+    MongoClient.connect(mongoURL, { useNewUrlParser: true }, function(err, client) {
+
+      // check for errors
+      if (!err) {}
+
+      // get db cursor
+      const db = client.db(dbName);
+      const tasks = db.collection('tasks');
+
+      tasks.find({ _id: ObjectId(req.params.id) }).toArray(function(err, items) {
+        if(err) { reject(err) } else {
+          res.json(items[0]);
+        }
+      })
+    })
+  });
+
   app.post('/api/task/new', function (req, res) {
     res.set('Content-Type', 'application/json');
     // connect to Mongo
@@ -242,8 +262,6 @@ if (cluster.isMaster) {
     res.set('Content-Type', 'application/json');
     const { fileName, fileType } = req.query;
     const s3 = new aws.S3({signatureVersion: 'v4'});
-
-    console.log('what does the API receive?', req.params.name)
 
     let s3Params = {
       Bucket: S3_BUCKET,

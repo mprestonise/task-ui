@@ -2,13 +2,14 @@ import React, { Component } from 'react'
 import update from 'immutability-helper'
 import moment from 'moment'
 import { HotKeys } from 'react-hotkeys'
+import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { Pane, Avatar, Text, Strong, Button, Icon, Tooltip, Position, toaster} from 'evergreen-ui'
-import Progress from './Progress'
-import TaskCard from './TaskCard'
-import Task from './Task'
-import './App.css'
+import Progress from '../Progress'
+import TaskCard from '../TaskCard'
+import Task from '../Task'
+import '../App.css'
 
-class App extends Component {
+class Admin extends Component {
   constructor(props) {
     super(props)
     this.state = {
@@ -587,6 +588,8 @@ class App extends Component {
       })
       .then(json => {
         toaster.success('Task cancelled', { id: 'updatingTask' })
+        this._dueToday(json)
+        this._dueThisWeek(json)
         this.setState({
           allTasks: json,
           tasks: json,
@@ -617,6 +620,8 @@ class App extends Component {
       })
       .then(json => {
         toaster.success('Task completed! Good job!!', { id: 'updatingTask' })
+        this._dueToday(json)
+        this._dueThisWeek(json)
         this.setState({
           allTasks: json,
           tasks: json,
@@ -876,7 +881,7 @@ class App extends Component {
             }
           </Pane>
 
-          <Pane padding={40} paddingTop={24} paddingBottom={0} background="#F6F8FA" width={"calc(100vw - 578px)"} overflow="scroll">
+          <Pane padding={40} paddingTop={24} paddingBottom={0} background="#f6f8fA" width={"calc(100vw - 578px)"} overflow="scroll">
 
             {this.state.tasks[this.state.selectedTask].status === 'Created'
               ? <Pane marginBottom={32} display="flex">
@@ -886,14 +891,28 @@ class App extends Component {
               : null
             }
 
-            <Pane
-              marginBottom={8}
-              display="inline-flex"
-              alignItems="center"
-              style={{ cursor: 'pointer' }}
-              onClick={() => this._closeTask()}>
-              <Icon icon="arrow-left" marginRight={8} size={12} color="#90999F" />
-              <Text size={300} color="#90999F">Close task</Text>
+            <Pane display="flex">
+              <Pane
+                marginBottom={8}
+                display="inline-flex"
+                alignItems="center"
+                style={{ cursor: 'pointer' }}
+                onClick={() => this._closeTask()}>
+                <Icon icon="arrow-left" marginRight={8} size={12} color="#90999F" />
+                <Text size={300} color="#90999F">Close task</Text>
+              </Pane>
+              <CopyToClipboard text={`https://taskui.herokuapp.com/task/${this.state.tasks[this.state.selectedTask]._id}`}
+                onCopy={() => toaster.success('Task URL copied')}>
+                <Pane
+                  marginLeft="auto"
+                  marginBottom={8}
+                  display="inline-flex"
+                  alignItems="center"
+                  style={{ cursor: 'pointer' }}>
+                  <Text size={300} color="#90999F">Share task</Text>
+                  <Icon icon="document-share" marginLeft={8} size={12} color="#90999F" />
+                </Pane>
+              </CopyToClipboard>
             </Pane>
 
             <Task
@@ -957,4 +976,4 @@ class App extends Component {
   }
 }
 
-export default App;
+export default Admin;
