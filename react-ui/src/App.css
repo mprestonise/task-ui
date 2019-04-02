@@ -159,3 +159,11 @@ h2 {
 .attachment-pill > button:hover * {
   fill: #20252A !important;
 }
+
+
+.open-artifact { transform: rotate(0) translate(-50%,-50%); max-width: 90vw; max-height: 90vh }
+.full-rotation { transition: none !important; }
+.rotate-1 { transform: rotate(-90deg) translate(37.5%,-50%); transition: all 150ms ease-out; max-width: 66vw; max-height: 66vh }
+.rotate-2 { transform: rotate(-180deg) translate(50%,50%); transition: all 150ms ease-out; max-width: 90vw; max-height: 90vh }
+.rotate-3 { transform: rotate(-270deg) translate(-37.5%,50%); transition: all 150ms ease-out; max-width: 66vw; max-height: 66vh }
+.rotate-4 { transform: rotate(-359.9deg) translate(-50%,-50%); max-width: 90vw; max-height: 90vh; }

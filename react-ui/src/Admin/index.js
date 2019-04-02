@@ -720,6 +720,16 @@ class Admin extends Component {
             </Button>
           </Tooltip>
           <Tooltip content={
+            <Pane background="white" padding={8} paddingTop={12}>
+              <Text display="block" marginBottom={8} size={300} color="#90999F"><Strong display="inline-block" size={300} color="#20252A">Placeholder for recent activity</Strong></Text>
+            </Pane>
+          }
+          appearance="card"
+          position={Position.RIGHT}>
+            <Icon size={20} marginLeft={23} marginTop={16} color="rgba(16,112,202,1)" icon="history" />
+          </Tooltip>
+
+          <Tooltip content={
               <Pane background="white" padding={8} paddingTop={12}>
                 <Text display="block" marginBottom={8} size={300} color="#90999F"><Strong display="inline-block" width={96} size={300} color="#20252A">New task</Strong> <span style={{ textAlign: 'right' }}>Cmd+Alt+1</span></Text>
                 <Text display="block" marginBottom={8} size={300} color="#90999F"><Strong display="inline-block" width={96} size={300} color="#20252A">Close task</Strong> <span style={{ textAlign: 'right' }}>Cmd+Alt+2</span></Text>

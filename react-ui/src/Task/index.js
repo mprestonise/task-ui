@@ -24,6 +24,7 @@ class Task extends Component {
       newAttachmentLabel: null,
       artifactOpen: false,
       selectedArtifact: null,
+      rotation: 0,
       newNote: ''
     }
   }
@@ -84,6 +85,14 @@ class Task extends Component {
       artifactOpen: true,
       selectedArtifact: artifact
     })
+  }
+
+  _rotateArtifact = () => {
+    if(this.state.rotation === 3) {
+      this.setState({ rotation: 0 })
+    } else {
+      this.setState({ rotation: this.state.rotation + 1 })
+    }
   }
 
   render() {
@@ -317,8 +326,9 @@ class Task extends Component {
 
         {this.state.artifactOpen
           ? <Pane width="100vw" height="100vh" left={0} top={0} position="fixed" zIndex={9999} background="rgba(0,0,0,0.8)">
-            <IconButton appearance="minimal" position="absolute" right={16} top={16} icon="cross" color="#90999F" height={32} onClick={() => this.setState({ selectedArtifact: null, artifactOpen: false })} />
-            <img src={this.state.selectedArtifact.url} alt={this.props.task.name} style={{ maxWidth: '90vw', maxHeight: '90vh', position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)' }} />
+            <IconButton appearance="minimal" position="absolute" zIndex={9999} right={16} top={16} icon="cross" color="#90999F" height={32} onClick={() => this.setState({ selectedArtifact: null, artifactOpen: false })} />
+            <IconButton appearance="minimal" position="absolute" zIndex={9999} right={48} top={16} icon="image-rotate-left" color="#90999F" height={32} onClick={() => this._rotateArtifact()} />
+            <img className={`open-artifact ${this.state.rotation === 3 ? 'full-rotation' : ''} rotate-${this.state.rotation}`} src={this.state.selectedArtifact.url} alt={this.props.task.name} style={{ position: 'absolute', left: '50%', top: '50%' }} />
           </Pane>
           : null
         }
