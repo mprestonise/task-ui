@@ -22,6 +22,8 @@ class Task extends Component {
       addingAttachment: false,
       newAttachmentURL: null,
       newAttachmentLabel: null,
+      artifactOpen: false,
+      selectedArtifact: null,
       newNote: ''
     }
   }
@@ -75,6 +77,13 @@ class Task extends Component {
 
   _openAttachment = (url) => {
     window.open(url, "_blank")
+  }
+
+  _showArtifact = (artifact) => {
+    this.setState({
+      artifactOpen: true,
+      selectedArtifact: artifact
+    })
   }
 
   render() {
@@ -214,7 +223,7 @@ class Task extends Component {
           }
           <Pane display="flex">
             {this.props.task.artifacts.map((artifact,a) => <Pane key={a} marginRight={8}>
-              <img alt={`Added ${moment(artifact.added).format('DD MMMM YYYY')}`} style={{ borderRadius: '4px' }} height="64" src={artifact.url} title={moment(artifact.added).format('DD MMMM YYYY')} />
+              <img onClick={() => {this._showArtifact(artifact)}} alt={`Added ${moment(artifact.added).format('DD MMMM YYYY')}`} style={{ borderRadius: '4px', cursor: 'pointer' }} height="64" src={artifact.url} title={moment(artifact.added).format('DD MMMM YYYY')} />
             </Pane>)}
           </Pane>
         </Pane>
@@ -305,6 +314,14 @@ class Task extends Component {
           </Pane>
 
         </Pane>
+
+        {this.state.artifactOpen
+          ? <Pane width="100vw" height="100vh" left={0} top={0} position="fixed" zIndex={9999} background="rgba(0,0,0,0.8)">
+            <IconButton appearance="minimal" position="absolute" right={16} top={16} icon="cross" color="#90999F" height={32} onClick={() => this.setState({ selectedArtifact: null, artifactOpen: false })} />
+            <img src={this.state.selectedArtifact.url} alt={this.props.task.name} style={{ maxWidth: '90vw', maxHeight: '90vh', position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)' }} />
+          </Pane>
+          : null
+        }
 
       </Pane>
     );
