@@ -15,6 +15,7 @@ class Admin extends Component {
     this.state = {
       allTasks: null,
       tasks: null,
+      activity: null,
       selectedTask: null,
       filteredStatus: null,
       filteredTeam: null,
@@ -38,12 +39,13 @@ class Admin extends Component {
       })
       .then(json => {
         toaster.closeAll()
-        this._calculateProgress(json)
-        this._dueToday(json)
-        this._dueThisWeek(json)
+        this._calculateProgress(json.tasks)
+        this._dueToday(json.tasks)
+        this._dueThisWeek(json.tasks)
         this.setState({
-          allTasks: json,
-          tasks: json,
+          allTasks: json.tasks,
+          tasks: json.tasks,
+          activity: json.activity,
           fetching: false
         });
       }).catch(e => {
@@ -156,7 +158,8 @@ class Admin extends Component {
     this.setState({ canCreateNewTask: false, fetching: true })
     fetch('/api/task/new', {
       method: 'POST',
-      headers: { 'Content-Type' : 'application/json' }
+      headers: { 'Content-Type' : 'application/json' },
+      body: JSON.stringify({ name: prompt('What would you like to name this task?') })
     })
       .then(response => {
         if (!response.ok) {
@@ -166,10 +169,11 @@ class Admin extends Component {
       })
       .then(json => {
         toaster.success('New task created successfully', { id: 'createNewTask' })
-        this._calculateProgress(json)
+        this._calculateProgress(json.tasks)
         this.setState({
-          allTasks: json,
-          tasks: json,
+          allTasks: json.tasks,
+          tasks: json.tasks,
+          activity: json.activity,
           canCreateNewTask: true,
           selectedTask: 0,
           fetching: false
@@ -230,10 +234,11 @@ class Admin extends Component {
         })
         .then(json => {
           toaster.success('Task updated', { id: 'updatingTask' })
-          this._calculateProgress(json)
+          this._calculateProgress(json.tasks)
           this.setState({
-            allTasks: json,
-            tasks: json,
+            allTasks: json.tasks,
+            tasks: json.tasks,
+            activity: json.activity,
             selectedTask: 0,
             fetching: false
           });
@@ -263,11 +268,12 @@ class Admin extends Component {
       })
       .then(json => {
         toaster.success('Task updated', { id: 'updatingTask' })
-        this._dueToday(json)
-        this._dueThisWeek(json)
+        this._dueToday(json.tasks)
+        this._dueThisWeek(json.tasks)
         this.setState({
-          allTasks: json,
-          tasks: json,
+          allTasks: json.tasks,
+          tasks: json.tasks,
+          activity: json.activity,
           selectedTask: 0,
           fetching: false
         });
@@ -297,8 +303,9 @@ class Admin extends Component {
       .then(json => {
         toaster.success('Task updated', { id: 'updatingTask' })
         this.setState({
-          allTasks: json,
-          tasks: json,
+          allTasks: json.tasks,
+          tasks: json.tasks,
+          activity: json.activity,
           selectedTask: 0,
           fetching: false
         });
@@ -317,7 +324,7 @@ class Admin extends Component {
     fetch(`/api/task/${taskId}/updateDesc`, {
       method: 'POST',
       headers: { 'Content-Type' : 'application/json' },
-      body: JSON.stringify({ desc: desc })
+      body: JSON.stringify({ desc: desc, name: this.state.tasks[taskIndex].name })
     })
       .then(response => {
         if (!response.ok) {
@@ -328,8 +335,9 @@ class Admin extends Component {
       .then(json => {
         toaster.success('Task updated', { id: 'updatingTask' })
         this.setState({
-          allTasks: json,
-          tasks: json,
+          allTasks: json.tasks,
+          tasks: json.tasks,
+          activity: json.activity,
           selectedTask: 0,
           fetching: false
         });
@@ -360,7 +368,7 @@ class Admin extends Component {
     fetch(`/api/task/${taskId}/updateSubtasks`, {
       method: 'POST',
       headers: { 'Content-Type' : 'application/json' },
-      body: JSON.stringify({ subtasks: newSubtasksArr.subtasks })
+      body: JSON.stringify({ subtasks: newSubtasksArr.subtasks, name: this.state.tasks[taskIndex].name })
     })
       .then(response => {
         if (!response.ok) {
@@ -370,10 +378,11 @@ class Admin extends Component {
       })
       .then(json => {
         toaster.success('Task updated', { id: 'updatingTask' })
-        this._calculateProgress(json)
+        this._calculateProgress(json.tasks)
         this.setState({
-          allTasks: json,
-          tasks: json,
+          allTasks: json.tasks,
+          tasks: json.tasks,
+          activity: json.activity,
           selectedTask: 0,
           fetching: false
         });
@@ -392,7 +401,7 @@ class Admin extends Component {
     fetch(`/api/task/${taskId}/updateTeam`, {
       method: 'POST',
       headers: { 'Content-Type' : 'application/json' },
-      body: JSON.stringify({ team: value })
+      body: JSON.stringify({ team: value, name: this.state.tasks[taskIndex].name })
     })
       .then(response => {
         if (!response.ok) {
@@ -403,8 +412,9 @@ class Admin extends Component {
       .then(json => {
         toaster.success('Task updated', { id: 'updatingTask' })
         this.setState({
-          allTasks: json,
-          tasks: json,
+          allTasks: json.tasks,
+          tasks: json.tasks,
+          activity: json.activity,
           selectedTask: 0,
           fetching: false
         });
@@ -435,6 +445,7 @@ class Admin extends Component {
           this.setState({
             allTasks: json.tasks,
             tasks: json.tasks,
+            activity: json.activity,
             selectedTask: 0,
             fetching: false
           });
@@ -462,7 +473,7 @@ class Admin extends Component {
     fetch(`/api/task/${taskId}/addAttachment`, {
       method: 'POST',
       headers: { 'Content-Type' : 'application/json' },
-      body: JSON.stringify({ attachment: attachment })
+      body: JSON.stringify({ attachment: attachment, name: this.state.tasks[taskIndex].name })
     })
       .then(response => {
         if (!response.ok) {
@@ -473,8 +484,9 @@ class Admin extends Component {
       .then(json => {
         toaster.success('Attachment.. attached!', { id: 'updatingTask' })
         this.setState({
-          allTasks: json,
-          tasks: json,
+          allTasks: json.tasks,
+          tasks: json.tasks,
+          activity: json.activity,
           selectedTask: 0,
           fetching: false
         });
@@ -518,7 +530,7 @@ class Admin extends Component {
     fetch(`/api/task/${taskId}/addNote`, {
       method: 'POST',
       headers: { 'Content-Type' : 'application/json' },
-      body: JSON.stringify({ note: note })
+      body: JSON.stringify({ note: note, name: this.state.tasks[taskIndex].name })
     })
       .then(response => {
         if (!response.ok) {
@@ -529,8 +541,9 @@ class Admin extends Component {
       .then(json => {
         toaster.success('Note added', { id: 'updatingTask' })
         this.setState({
-          allTasks: json,
-          tasks: json,
+          allTasks: json.tasks,
+          tasks: json.tasks,
+          activity: json.activity,
           selectedTask: 0,
           fetching: false
         });
@@ -548,7 +561,8 @@ class Admin extends Component {
     })
     fetch(`/api/task/${taskId}/startTask`, {
       method: 'POST',
-      headers: { 'Content-Type' : 'application/json' }
+      headers: { 'Content-Type' : 'application/json' },
+      body: JSON.stringify({ name: this.state.tasks[taskIndex].name })
     })
       .then(response => {
         if (!response.ok) {
@@ -559,8 +573,9 @@ class Admin extends Component {
       .then(json => {
         window.setTimeout(() => { toaster.success("Task started! Go get 'em!!", { id: 'updatingTask' }) }, 750)
         this.setState({
-          allTasks: json,
-          tasks: json,
+          allTasks: json.tasks,
+          tasks: json.tasks,
+          activity: json.activity,
           selectedTask: 0,
           fetching: false
         });
@@ -610,7 +625,8 @@ class Admin extends Component {
     })
     fetch(`/api/task/${taskId}/completed`, {
       method: 'POST',
-      headers: { 'Content-Type' : 'application/json' }
+      headers: { 'Content-Type' : 'application/json' },
+      body: JSON.stringify({ name: this.state.tasks[taskIndex].name })
     })
       .then(response => {
         if (!response.ok) {
@@ -620,11 +636,12 @@ class Admin extends Component {
       })
       .then(json => {
         toaster.success('Task completed! Good job!!', { id: 'updatingTask' })
-        this._dueToday(json)
-        this._dueThisWeek(json)
+        this._dueToday(json.tasks)
+        this._dueThisWeek(json.tasks)
         this.setState({
-          allTasks: json,
-          tasks: json,
+          allTasks: json.tasks,
+          tasks: json.tasks,
+          activity: json.activity,
           selectedTask: 0,
           fetching: false
         });
@@ -642,7 +659,8 @@ class Admin extends Component {
     })
     fetch(`/api/task/${taskId}/overdue`, {
       method: 'POST',
-      headers: { 'Content-Type' : 'application/json' }
+      headers: { 'Content-Type' : 'application/json' },
+      body: JSON.stringify({ name: this.state.tasks[taskIndex].name })
     })
       .then(response => {
         if (!response.ok) {
@@ -653,8 +671,9 @@ class Admin extends Component {
       .then(json => {
         toaster.success("Task updated. You'll get 'em next time'", { id: 'updatingTask' })
         this.setState({
-          allTasks: json,
-          tasks: json,
+          allTasks: json.tasks,
+          tasks: json.tasks,
+          activity: json.activity,
           selectedTask: 0,
           fetching: false
         });
@@ -669,6 +688,15 @@ class Admin extends Component {
     this.setState({
       selectedTask: null
     })
+  }
+
+  _selectActivity = (task_id) => {
+    let taskIndex = 0
+    this.state.tasks.map((task,index) => {
+      if(task._id === task_id) { taskIndex = index }
+      return null;
+    })
+    this._selectTask(taskIndex)
   }
 
   render() {
@@ -720,8 +748,14 @@ class Admin extends Component {
             </Button>
           </Tooltip>
           <Tooltip content={
-            <Pane background="white" padding={8} paddingTop={12}>
-              <Text display="block" marginBottom={8} size={300} color="#90999F"><Strong display="inline-block" size={300} color="#20252A">Placeholder for recent activity</Strong></Text>
+            <Pane background="white" padding={8}>
+              <Text display="block" className="caps-label" marginBottom={8}>Recent activity</Text>
+              {this.state.activity && this.state.activity.length > 0
+                ? <Pane>
+                  {this.state.activity.map((activity,a) => <Text key={a} onClick={() => this._selectActivity(activity.task_id)} style={{ cursor: 'pointer' }} display="block" marginBottom={8} borderLeft="2px solid #90999F" paddingLeft={8} size={300} color="#90999F"><Strong display="block" size={300} color="#20252A">{activity.name}</Strong><small>{activity.content}</small></Text>)}
+                </Pane>
+                : <Text display="block" marginBottom={8} size={300} color="#90999F"><Strong display="inline-block" size={300} color="#20252A">No recent activity</Strong></Text>
+              }
             </Pane>
           }
           appearance="card"

@@ -25,7 +25,7 @@ class TaskCard extends Component {
         <Pane display="flex" alignItems="center">
 
           <Pane
-            background={`${task.was_overdue && !task.completed ? '#EF4D4D' : ''} ${task.completed ? '#47B881' : ''} ${task.status === 'Cancelled' ? '#90999F' : ''} ${!moment(task.due_date).isBefore(new Date()) && task.status && !task.was_overdue === 'Started' ? '#4099FF' : ''} ${task.status === 'Created' && !task.was_overdue ? '#FFD040' : ''}`}
+            background={`${task.was_overdue && !task.completed ? '#EF4D4D' : ''} ${task.completed ? '#47B881' : ''} ${task.status === 'Cancelled' ? '#90999F' : ''} ${!moment(task.due_date).isBefore(new Date()) && task.status === 'Started' && !task.was_overdue ? '#4099FF' : ''} ${task.status === 'Created' && !task.was_overdue ? '#FFD040' : ''}`}
             padding={8}
             height={40}
             paddingLeft={12}

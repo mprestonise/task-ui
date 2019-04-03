@@ -63,12 +63,18 @@ if (cluster.isMaster) {
       if (!err) {}
 
       // get db cursor
-      const db = client.db(dbName);
-      const tasks = db.collection('tasks');
+      const db = client.db(dbName)
+      const tasks = db.collection('tasks')
+      const activity = db.collection('activity')
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+      tasks.find().sort({ updated: -1 }).toArray(function(err, tasks) {
         if(err) { reject(err) } else {
-          res.json(items);
+          activity.find().sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+            res.json({
+              tasks: tasks,
+              activity: items
+            })
+          })
         }
       })
     })
@@ -103,11 +109,12 @@ if (cluster.isMaster) {
       if (!err) {}
 
       // get db cursor
-      const db = client.db(dbName);
-      const tasks = db.collection('tasks');
+      const db = client.db(dbName)
+      const tasks = db.collection('tasks')
+      const activity = db.collection('activity')
 
       tasks.insertOne({
-        name: "New task",
+        name: req.body.name,
         desc: "This task does not have a description",
         team: "Camel team",
         status: "Created",
@@ -117,17 +124,30 @@ if (cluster.isMaster) {
         completed_date: null,
         cancelled_date: null,
         was_overdue: false,
-        due_date: moment( new Date() ).add(7, 'days').toDate(),
+        due_date: moment( new Date() ).add(8, 'days').toDate(),
         updated: new Date(),
         subtasks: [],
         artifacts: [],
         attachments: [],
         notes: []
+      }, (err,inserted) => {
+        activity.insertOne({
+          name: 'Created new task',
+          content: req.body.name,
+          task_id: inserted.insertedId,
+          created_at: new Date()
+        })
       })
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+
+      tasks.find().sort({ updated: -1 }).toArray(function(err, tasks) {
         if(err) { reject(err) } else {
-          res.json(items);
+          activity.find().sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+            res.json({
+              tasks: tasks,
+              activity: items
+            })
+          })
         }
       })
     })
@@ -142,17 +162,35 @@ if (cluster.isMaster) {
       if (!err) {}
 
       // get db cursor
-      const db = client.db(dbName);
-      const tasks = db.collection('tasks');
+      const db = client.db(dbName)
+      const tasks = db.collection('tasks')
+      const activity = db.collection('activity')
 
       tasks.findOneAndUpdate( { _id : ObjectId(req.params.id) },
       {
         $set: { name: req.body.name, updated: new Date() }
       })
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+      activity.insertOne({
+        name: 'Updated task name',
+        content: req.body.name,
+        task_id: ObjectId(req.params.id),
+        created_at: new Date()
+      })
+
+      activity.updateMany(
+        { task_id: ObjectId(req.params.id) },
+        { $set: { content: req.body.name } }
+      );
+
+      tasks.find().sort({ updated: -1 }).toArray(function(err, tasks) {
         if(err) { reject(err) } else {
-          res.json(items);
+          activity.find().sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+            res.json({
+              tasks: tasks,
+              activity: items
+            })
+          })
         }
       })
     })
@@ -167,17 +205,30 @@ if (cluster.isMaster) {
       if (!err) {}
 
       // get db cursor
-      const db = client.db(dbName);
-      const tasks = db.collection('tasks');
+      const db = client.db(dbName)
+      const tasks = db.collection('tasks')
+      const activity = db.collection('activity')
 
       tasks.findOneAndUpdate( { _id : ObjectId(req.params.id) },
       {
         $set: { desc: req.body.desc, updated: new Date() }
       })
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+      activity.insertOne({
+        name: 'Updated task description',
+        content: req.body.name,
+        task_id: ObjectId(req.params.id),
+        created_at: new Date()
+      })
+
+      tasks.find().sort({ updated: -1 }).toArray(function(err, tasks) {
         if(err) { reject(err) } else {
-          res.json(items);
+          activity.find().sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+            res.json({
+              tasks: tasks,
+              activity: items
+            })
+          })
         }
       })
     })
@@ -192,17 +243,29 @@ if (cluster.isMaster) {
       if (!err) {}
 
       // get db cursor
-      const db = client.db(dbName);
-      const tasks = db.collection('tasks');
+      const db = client.db(dbName)
+      const tasks = db.collection('tasks')
+      const activity = db.collection('activity')
 
       tasks.findOneAndUpdate( { _id : ObjectId(req.params.id) },
       {
         $set: { due_date: req.body.due_date, updated: new Date() }
       })
+      activity.insertOne({
+        name: 'Updated task due date',
+        content: req.body.due_date,
+        task_id: ObjectId(req.params.id),
+        created_at: new Date()
+      })
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+      tasks.find().sort({ updated: -1 }).toArray(function(err, tasks) {
         if(err) { reject(err) } else {
-          res.json(items);
+          activity.find().sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+            res.json({
+              tasks: tasks,
+              activity: items
+            })
+          })
         }
       })
     })
@@ -217,17 +280,29 @@ if (cluster.isMaster) {
       if (!err) {}
 
       // get db cursor
-      const db = client.db(dbName);
-      const tasks = db.collection('tasks');
+      const db = client.db(dbName)
+      const tasks = db.collection('tasks')
+      const activity = db.collection('activity')
 
       tasks.findOneAndUpdate( { _id : ObjectId(req.params.id) },
       {
         $set: { team: req.body.team, updated: new Date() }
       })
+      activity.insertOne({
+        name: 'Updated task team',
+        content: req.body.name,
+        task_id: ObjectId(req.params.id),
+        created_at: new Date()
+      })
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+      tasks.find().sort({ updated: -1 }).toArray(function(err, tasks) {
         if(err) { reject(err) } else {
-          res.json(items);
+          activity.find().sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+            res.json({
+              tasks: tasks,
+              activity: items
+            })
+          })
         }
       })
     })
@@ -242,17 +317,29 @@ if (cluster.isMaster) {
       if (!err) {}
 
       // get db cursor
-      const db = client.db(dbName);
-      const tasks = db.collection('tasks');
+      const db = client.db(dbName)
+      const tasks = db.collection('tasks')
+      const activity = db.collection('activity')
 
       tasks.findOneAndUpdate( { _id : ObjectId(req.params.id) },
       {
         $set: { subtasks: req.body.subtasks, updated: new Date() }
       })
+      activity.insertOne({
+        name: 'Updated task > subtasks',
+        content: req.body.name,
+        task_id: ObjectId(req.params.id),
+        created_at: new Date()
+      })
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+      tasks.find().sort({ updated: -1 }).toArray(function(err, tasks) {
         if(err) { reject(err) } else {
-          res.json(items);
+          activity.find().sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+            res.json({
+              tasks: tasks,
+              activity: items
+            })
+          })
         }
       })
     })
@@ -284,8 +371,9 @@ if (cluster.isMaster) {
         if (!err) {}
 
         // get db cursor
-        const db = client.db(dbName);
-        const tasks = db.collection('tasks');
+        const db = client.db(dbName)
+        const tasks = db.collection('tasks')
+        const activity = db.collection('activity')
 
         const newArtifact = {
           added: new Date(),
@@ -297,10 +385,23 @@ if (cluster.isMaster) {
           $push: { artifacts: { $each: [newArtifact], $position: 0 } },
           $set: { updated: new Date() }
         })
+        activity.insertOne({
+          name: 'Added an artifact to task',
+          content: newArtifact.url,
+          task_id: ObjectId(req.params.id),
+          created_at: new Date()
+        })
 
-        tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+        tasks.find().sort({ updated: -1 }).toArray(function(err, tasks) {
           if(err) { reject(err) } else {
-            res.json({ tasks: items, signedUrl: returnData.signedRequest, url: returnData.url });
+            activity.find().sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+              res.json({
+                tasks: tasks,
+                signedUrl: returnData.signedRequest,
+                url: returnData.url,
+                activity: items
+              })
+            })
           }
         })
       })
@@ -317,18 +418,30 @@ if (cluster.isMaster) {
       if (!err) {}
 
       // get db cursor
-      const db = client.db(dbName);
-      const tasks = db.collection('tasks');
+      const db = client.db(dbName)
+      const tasks = db.collection('tasks')
+      const activity = db.collection('activity')
 
       tasks.findOneAndUpdate( { _id : ObjectId(req.params.id) },
       {
         $push: { attachments: { $each: [req.body.attachment], $position: 0 } },
         $set: { updated: new Date() }
       })
+      activity.insertOne({
+        name: 'Added an attachment to task',
+        content: req.body.name,
+        task_id: ObjectId(req.params.id),
+        created_at: new Date()
+      })
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+      tasks.find().sort({ updated: -1 }).toArray(function(err, tasks) {
         if(err) { reject(err) } else {
-          res.json(items);
+          activity.find().sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+            res.json({
+              tasks: tasks,
+              activity: items
+            })
+          })
         }
       })
     })
@@ -369,8 +482,9 @@ if (cluster.isMaster) {
       if (!err) {}
 
       // get db cursor
-      const db = client.db(dbName);
-      const tasks = db.collection('tasks');
+      const db = client.db(dbName)
+      const tasks = db.collection('tasks')
+      const activity = db.collection('activity')
 
       const newNote = {
         added: new Date(),
@@ -382,10 +496,21 @@ if (cluster.isMaster) {
         $push: { notes: { $each: [newNote], $position: 0 } },
         $set: { updated: new Date() }
       })
+      activity.insertOne({
+        name: 'Added a note to task',
+        content: req.body.name,
+        task_id: ObjectId(req.params.id),
+        created_at: new Date()
+      })
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+      tasks.find().sort({ updated: -1 }).toArray(function(err, tasks) {
         if(err) { reject(err) } else {
-          res.json(items);
+          activity.find().sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+            res.json({
+              tasks: tasks,
+              activity: items
+            })
+          })
         }
       })
     })
@@ -400,17 +525,29 @@ if (cluster.isMaster) {
       if (!err) {}
 
       // get db cursor
-      const db = client.db(dbName);
-      const tasks = db.collection('tasks');
+      const db = client.db(dbName)
+      const tasks = db.collection('tasks')
+      const activity = db.collection('activity')
 
       tasks.findOneAndUpdate( { _id : ObjectId(req.params.id) },
       {
         $set: { status: 'Started', started_date: new Date(), updated: new Date() }
       })
+      activity.insertOne({
+        name: 'Task: Started',
+        content: req.body.name,
+        task_id: ObjectId(req.params.id),
+        created_at: new Date()
+      })
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+      tasks.find().sort({ updated: -1 }).toArray(function(err, tasks) {
         if(err) { reject(err) } else {
-          res.json(items);
+          activity.find().sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+            res.json({
+              tasks: tasks,
+              activity: items
+            })
+          })
         }
       })
     })
@@ -425,17 +562,29 @@ if (cluster.isMaster) {
       if (!err) {}
 
       // get db cursor
-      const db = client.db(dbName);
-      const tasks = db.collection('tasks');
+      const db = client.db(dbName)
+      const tasks = db.collection('tasks')
+      const activity = db.collection('activity')
 
       tasks.findOneAndUpdate( { _id : ObjectId(req.params.id) },
       {
         $set: { status: 'Completed', completed: true, completed_date: new Date(), updated: new Date() }
       })
+      activity.insertOne({
+        name: 'Task: Completed',
+        content: req.body.name,
+        task_id: ObjectId(req.params.id),
+        created_at: new Date()
+      })
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+      tasks.find().sort({ updated: -1 }).toArray(function(err, tasks) {
         if(err) { reject(err) } else {
-          res.json(items);
+          activity.find().sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+            res.json({
+              tasks: tasks,
+              activity: items
+            })
+          })
         }
       })
     })
@@ -450,17 +599,29 @@ if (cluster.isMaster) {
       if (!err) {}
 
       // get db cursor
-      const db = client.db(dbName);
-      const tasks = db.collection('tasks');
+      const db = client.db(dbName)
+      const tasks = db.collection('tasks')
+      const activity = db.collection('activity')
 
       tasks.findOneAndUpdate( { _id : ObjectId(req.params.id) },
       {
         $set: { was_overdue: true, updated: new Date() }
       })
+      activity.insertOne({
+        name: 'Task: Overdue',
+        content: req.body.name,
+        task_id: ObjectId(req.params.id),
+        created_at: new Date()
+      })
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+      tasks.find().sort({ updated: -1 }).toArray(function(err, tasks) {
         if(err) { reject(err) } else {
-          res.json(items);
+          activity.find().sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+            res.json({
+              tasks: tasks,
+              activity: items
+            })
+          })
         }
       })
     })
