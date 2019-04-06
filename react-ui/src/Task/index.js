@@ -317,7 +317,7 @@ class Task extends Component {
               />
               <Pane marginTop={-8}>
                 <Text size={300} color="#90999F">{moment(note.added).format('DD MMMM YYYY')}</Text>
-                <Text display="block" marginBottom={16} size={400}>{note.content}</Text>
+                <Text display="block" style={{ wordBreak: 'break-word' }} marginBottom={16} size={400}>{note.content}</Text>
               </Pane>
             </Pane>)}
           </Pane>
