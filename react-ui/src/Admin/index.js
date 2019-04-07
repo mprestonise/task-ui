@@ -1,4 +1,7 @@
 import React, { Component } from 'react'
+import { withRouter } from 'react-router-dom'
+import { instanceOf } from 'prop-types'
+import { withCookies, Cookies } from 'react-cookie'
 import update from 'immutability-helper'
 import moment from 'moment'
 import { HotKeys } from 'react-hotkeys'
@@ -10,6 +13,11 @@ import Task from '../Task'
 import '../App.css'
 
 class Admin extends Component {
+
+  static propTypes = {
+    cookies: instanceOf(Cookies).isRequired
+  };
+
   constructor(props) {
     super(props)
     this.state = {
@@ -30,7 +38,7 @@ class Admin extends Component {
 
   componentDidMount() {
     toaster.notify('Loading tasks..')
-    fetch('/api/tasks')
+    fetch(`/api/tasks/${JSON.parse(this.props.cookies.cookies.user)._id}`)
       .then(response => {
         if (!response.ok) {
           throw new Error(`status ${response.status}`);
@@ -159,7 +167,7 @@ class Admin extends Component {
     fetch('/api/task/new', {
       method: 'POST',
       headers: { 'Content-Type' : 'application/json' },
-      body: JSON.stringify({ name: prompt('What would you like to name this task?') })
+      body: JSON.stringify({ name: prompt('What would you like to name this task?'), user: JSON.parse(this.props.cookies.cookies.user)._id })
     })
       .then(response => {
         if (!response.ok) {
@@ -187,7 +195,7 @@ class Admin extends Component {
 
   _deleteTask = (id) => {
     toaster.danger('Deleting task..', { id: 'deleteNewTask' })
-    fetch(`/api/task/${id}/archive`, {
+    fetch(`/api/task/${id}/archive/${JSON.parse(this.props.cookies.cookies.user)._id}`, {
       method: 'POST',
       headers: { 'Content-Type' : 'application/json' }
     })
@@ -224,7 +232,7 @@ class Admin extends Component {
       fetch(`/api/task/${taskId}/updateSubtasks`, {
         method: 'POST',
         headers: { 'Content-Type' : 'application/json' },
-        body: JSON.stringify({ subtasks: this.state.tasks[taskIndex].subtasks })
+        body: JSON.stringify({ subtasks: this.state.tasks[taskIndex].subtasks, user: JSON.parse(this.props.cookies.cookies.user)._id })
       })
         .then(response => {
           if (!response.ok) {
@@ -258,7 +266,7 @@ class Admin extends Component {
     fetch(`/api/task/${taskId}/updateDueDate`, {
       method: 'POST',
       headers: { 'Content-Type' : 'application/json' },
-      body: JSON.stringify({ due_date: date })
+      body: JSON.stringify({ due_date: date, user: JSON.parse(this.props.cookies.cookies.user)._id })
     })
       .then(response => {
         if (!response.ok) {
@@ -292,7 +300,7 @@ class Admin extends Component {
     fetch(`/api/task/${taskId}/updateName`, {
       method: 'POST',
       headers: { 'Content-Type' : 'application/json' },
-      body: JSON.stringify({ name: name })
+      body: JSON.stringify({ name: name, user: JSON.parse(this.props.cookies.cookies.user)._id })
     })
       .then(response => {
         if (!response.ok) {
@@ -324,7 +332,7 @@ class Admin extends Component {
     fetch(`/api/task/${taskId}/updateDesc`, {
       method: 'POST',
       headers: { 'Content-Type' : 'application/json' },
-      body: JSON.stringify({ desc: desc, name: this.state.tasks[taskIndex].name })
+      body: JSON.stringify({ desc: desc, name: this.state.tasks[taskIndex].name, user: JSON.parse(this.props.cookies.cookies.user)._id })
     })
       .then(response => {
         if (!response.ok) {
@@ -368,7 +376,7 @@ class Admin extends Component {
     fetch(`/api/task/${taskId}/updateSubtasks`, {
       method: 'POST',
       headers: { 'Content-Type' : 'application/json' },
-      body: JSON.stringify({ subtasks: newSubtasksArr.subtasks, name: this.state.tasks[taskIndex].name })
+      body: JSON.stringify({ subtasks: newSubtasksArr.subtasks, name: this.state.tasks[taskIndex].name, user: JSON.parse(this.props.cookies.cookies.user)._id })
     })
       .then(response => {
         if (!response.ok) {
@@ -401,7 +409,7 @@ class Admin extends Component {
     fetch(`/api/task/${taskId}/updateTeam`, {
       method: 'POST',
       headers: { 'Content-Type' : 'application/json' },
-      body: JSON.stringify({ team: value, name: this.state.tasks[taskIndex].name })
+      body: JSON.stringify({ team: value, name: this.state.tasks[taskIndex].name, user: JSON.parse(this.props.cookies.cookies.user)._id })
     })
       .then(response => {
         if (!response.ok) {
@@ -429,7 +437,7 @@ class Admin extends Component {
     let data = new FormData()
     data.append('file', artifact[0])
     toaster.notify('Uploading..', { id: 'updatingTask' })
-    fetch(`/api/task/${taskId}/addArtifact/sign-s3?fileName=${artifact[0].name}&fileType=${artifact[0].type}`, {
+    fetch(`/api/task/${taskId}/addArtifact/${JSON.parse(this.props.cookies.cookies.user)._id}/sign-s3?fileName=${artifact[0].name}&fileType=${artifact[0].type}`, {
       method: 'POST',
       body: data
     })
@@ -473,7 +481,7 @@ class Admin extends Component {
     fetch(`/api/task/${taskId}/addAttachment`, {
       method: 'POST',
       headers: { 'Content-Type' : 'application/json' },
-      body: JSON.stringify({ attachment: attachment, name: this.state.tasks[taskIndex].name })
+      body: JSON.stringify({ attachment: attachment, name: this.state.tasks[taskIndex].name, user: JSON.parse(this.props.cookies.cookies.user)._id })
     })
       .then(response => {
         if (!response.ok) {
@@ -499,7 +507,7 @@ class Admin extends Component {
 
   _removeAttachment = (taskIndex, attachment, taskId) => {
     toaster.danger('Detaching..', { id: 'updatingTask' })
-    fetch(`/api/task/${taskId}/removeAttachment`, {
+    fetch(`/api/task/${taskId}/removeAttachment/${JSON.parse(this.props.cookies.cookies.user)._id}`, {
       method: 'POST',
       headers: { 'Content-Type' : 'application/json' },
       body: JSON.stringify({ attachment: attachment })
@@ -530,7 +538,7 @@ class Admin extends Component {
     fetch(`/api/task/${taskId}/addNote`, {
       method: 'POST',
       headers: { 'Content-Type' : 'application/json' },
-      body: JSON.stringify({ note: note, name: this.state.tasks[taskIndex].name })
+      body: JSON.stringify({ note: note, name: this.state.tasks[taskIndex].name, user: JSON.parse(this.props.cookies.cookies.user)._id })
     })
       .then(response => {
         if (!response.ok) {
@@ -562,7 +570,7 @@ class Admin extends Component {
     fetch(`/api/task/${taskId}/startTask`, {
       method: 'POST',
       headers: { 'Content-Type' : 'application/json' },
-      body: JSON.stringify({ name: this.state.tasks[taskIndex].name })
+      body: JSON.stringify({ name: this.state.tasks[taskIndex].name, user: JSON.parse(this.props.cookies.cookies.user)._id })
     })
       .then(response => {
         if (!response.ok) {
@@ -591,7 +599,7 @@ class Admin extends Component {
     this.setState({
       tasks: update(this.state.tasks, { [taskIndex]: { status: { $set: 'Cancelled' }, updated: { $set: new Date() }, cancelled_date: { $set: new Date() } } })
     })
-    fetch(`/api/task/${taskId}/cancelled`, {
+    fetch(`/api/task/${taskId}/cancelled/${JSON.parse(this.props.cookies.cookies.user)._id}`, {
       method: 'POST',
       headers: { 'Content-Type' : 'application/json' }
     })
@@ -626,7 +634,7 @@ class Admin extends Component {
     fetch(`/api/task/${taskId}/completed`, {
       method: 'POST',
       headers: { 'Content-Type' : 'application/json' },
-      body: JSON.stringify({ name: this.state.tasks[taskIndex].name })
+      body: JSON.stringify({ name: this.state.tasks[taskIndex].name, user: JSON.parse(this.props.cookies.cookies.user)._id })
     })
       .then(response => {
         if (!response.ok) {
@@ -660,7 +668,7 @@ class Admin extends Component {
     fetch(`/api/task/${taskId}/overdue`, {
       method: 'POST',
       headers: { 'Content-Type' : 'application/json' },
-      body: JSON.stringify({ name: this.state.tasks[taskIndex].name })
+      body: JSON.stringify({ name: this.state.tasks[taskIndex].name, user: JSON.parse(this.props.cookies.cookies.user)._id })
     })
       .then(response => {
         if (!response.ok) {
@@ -1020,4 +1028,4 @@ class Admin extends Component {
   }
 }
 
-export default Admin;
+export default withCookies(withRouter(Admin));

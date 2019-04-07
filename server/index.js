@@ -2,6 +2,7 @@ require('dotenv').config()
 
 const express = require('express')
 const path = require('path')
+const bcrypt = require('bcryptjs')
 const bodyParser = require('body-parser')
 const formData = require('express-form-data')
 const MongoClient = require('mongodb').MongoClient;
@@ -54,7 +55,107 @@ if (cluster.isMaster) {
     res.send('{"message":"Hello from the custom server!"}');
   });
 
-  app.get('/api/tasks', function (req, res) {
+  app.post('/api/register', function (req, res) {
+    res.set('Content-Type', 'application/json');
+    MongoClient.connect(mongoURL, { useNewUrlParser: true }, function(err, client) {
+
+      // check for errors
+      if (!err) {}
+
+      // get db cursor
+      const db = client.db(dbName)
+      const users = db.collection('users')
+      const tasks = db.collection('tasks')
+      const activity = db.collection('activity')
+
+      // Hash the password & add salt
+      const salt = bcrypt.genSaltSync(10);
+      const hash = bcrypt.hashSync(req.body.password, salt);
+
+      // I should check to make sure the email address hasn't been used already
+
+      users.find({ email: req.body.email }).toArray(function(err,items) {
+        if(err) { console.log(err) }
+        else {
+          if(items.length > 0){
+            res.json({ status: 401, message: 'User already exists' })
+          } else {
+            users.insertOne({
+              email: req.body.email,
+              password: hash,
+              role: {
+                label: 'User',
+                level: 1
+              }
+            }, (err,insertedUser) => {
+              tasks.insertOne({
+                owner: insertedUser.insertedId,
+                name: "Your first task",
+                desc: "This is a description of the task. Click here to edit it",
+                team: "Design",
+                status: "Created",
+                created_date: new Date(),
+                started_date: null,
+                completed: false,
+                completed_date: null,
+                cancelled_date: null,
+                was_overdue: false,
+                due_date: moment( new Date() ).add(8, 'days').toDate(),
+                updated: new Date(),
+                subtasks: [],
+                artifacts: [],
+                attachments: [],
+                notes: []
+              }, (err,insertedTask) => {
+                activity.insertOne({
+                  name: 'Created an account',
+                  owner: insertedUser.insertedId.toString(),
+                  content: "Welcome to TaskUI",
+                  task_id: insertedTask.insertedId,
+                  created_at: new Date()
+                })
+                res.json({ status: 200, message: 'User created', user: { _id: insertedUser.insertedId, email: req.body.email, password: hash, role: { label: 'User', level: 1 } } })
+              })
+            })
+          }
+        }
+      })
+
+
+    })
+  });
+
+  app.post('/api/login', function (req, res) {
+    res.set('Content-Type', 'application/json');
+    MongoClient.connect(mongoURL, { useNewUrlParser: true }, function(err, client) {
+
+      // check for errors
+      if (!err) {}
+
+      // get db cursor
+      const db = client.db(dbName)
+      const users = db.collection('users')
+
+      users.find({ email: req.body.email }).toArray(function(err,items) {
+        if(err) { console.log(err) }
+        else {
+          if(items.length === 0) { res.json({ status: 404, message: 'Email & password do not match' }) }
+          else {
+            // Check the password against the hash
+            const comparison = bcrypt.compareSync(req.body.password, items[0].password)
+            if(comparison){
+              res.json({ status: 200, message: 'Email & password match', user: items[0] })
+            } else {
+              res.json({ status: 404, message: 'Email & password do not match' })
+            }
+          }
+        }
+      })
+    })
+  });
+
+
+  app.get('/api/tasks/:user', function (req, res) {
     res.set('Content-Type', 'application/json');
     // connect to Mongo
     MongoClient.connect(mongoURL, { useNewUrlParser: true }, function(err, client) {
@@ -67,9 +168,9 @@ if (cluster.isMaster) {
       const tasks = db.collection('tasks')
       const activity = db.collection('activity')
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, tasks) {
+      tasks.find({ owner: ObjectId(req.params.user) }).sort({ updated: -1 }).toArray(function(err, tasks) {
         if(err) { reject(err) } else {
-          activity.find().sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+          activity.find({ owner: req.params.user }).sort({ created_at: -1 }).limit(5).toArray((err,items) => {
             res.json({
               tasks: tasks,
               activity: items
@@ -115,6 +216,7 @@ if (cluster.isMaster) {
 
       tasks.insertOne({
         name: req.body.name,
+        owner: req.body.user,
         desc: "This task does not have a description",
         team: "Camel team",
         status: "Created",
@@ -133,6 +235,7 @@ if (cluster.isMaster) {
       }, (err,inserted) => {
         activity.insertOne({
           name: 'Created new task',
+          owner: req.body.user,
           content: req.body.name,
           task_id: inserted.insertedId,
           created_at: new Date()
@@ -140,9 +243,9 @@ if (cluster.isMaster) {
       })
 
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, tasks) {
+      tasks.find({ owner: ObjectId(req.body.user) }).sort({ updated: -1 }).toArray(function(err, tasks) {
         if(err) { reject(err) } else {
-          activity.find().sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+          activity.find({ owner: req.body.user }).sort({ created_at: -1 }).limit(5).toArray((err,items) => {
             res.json({
               tasks: tasks,
               activity: items
@@ -173,6 +276,7 @@ if (cluster.isMaster) {
 
       activity.insertOne({
         name: 'Updated task name',
+        owner: req.body.user,
         content: req.body.name,
         task_id: ObjectId(req.params.id),
         created_at: new Date()
@@ -183,9 +287,9 @@ if (cluster.isMaster) {
         { $set: { content: req.body.name } }
       );
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, tasks) {
+      tasks.find({ owner: ObjectId(req.body.user) }).sort({ updated: -1 }).toArray(function(err, tasks) {
         if(err) { reject(err) } else {
-          activity.find().sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+          activity.find({ owner: req.body.user }).sort({ created_at: -1 }).limit(5).toArray((err,items) => {
             res.json({
               tasks: tasks,
               activity: items
@@ -216,14 +320,15 @@ if (cluster.isMaster) {
 
       activity.insertOne({
         name: 'Updated task description',
+        owner: req.body.user,
         content: req.body.name,
         task_id: ObjectId(req.params.id),
         created_at: new Date()
       })
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, tasks) {
+      tasks.find({ owner: ObjectId(req.body.user) }).sort({ updated: -1 }).toArray(function(err, tasks) {
         if(err) { reject(err) } else {
-          activity.find().sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+          activity.find({ owner: req.body.user }).sort({ created_at: -1 }).limit(5).toArray((err,items) => {
             res.json({
               tasks: tasks,
               activity: items
@@ -253,14 +358,15 @@ if (cluster.isMaster) {
       })
       activity.insertOne({
         name: 'Updated task due date',
+        owner: req.body.user,
         content: req.body.due_date,
         task_id: ObjectId(req.params.id),
         created_at: new Date()
       })
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, tasks) {
+      tasks.find({ owner: ObjectId(req.body.user) }).sort({ updated: -1 }).toArray(function(err, tasks) {
         if(err) { reject(err) } else {
-          activity.find().sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+          activity.find({ owner: req.body.user }).sort({ created_at: -1 }).limit(5).toArray((err,items) => {
             res.json({
               tasks: tasks,
               activity: items
@@ -290,14 +396,15 @@ if (cluster.isMaster) {
       })
       activity.insertOne({
         name: 'Updated task team',
+        owner: req.body.user,
         content: req.body.name,
         task_id: ObjectId(req.params.id),
         created_at: new Date()
       })
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, tasks) {
+      tasks.find({ owner: ObjectId(req.body.user) }).sort({ updated: -1 }).toArray(function(err, tasks) {
         if(err) { reject(err) } else {
-          activity.find().sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+          activity.find({ owner: req.body.user }).sort({ created_at: -1 }).limit(5).toArray((err,items) => {
             res.json({
               tasks: tasks,
               activity: items
@@ -327,14 +434,15 @@ if (cluster.isMaster) {
       })
       activity.insertOne({
         name: 'Updated task > subtasks',
+        owner: req.body.user,
         content: req.body.name,
         task_id: ObjectId(req.params.id),
         created_at: new Date()
       })
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, tasks) {
+      tasks.find({ owner: ObjectId(req.body.user) }).sort({ updated: -1 }).toArray(function(err, tasks) {
         if(err) { reject(err) } else {
-          activity.find().sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+          activity.find({ owner: req.body.user }).sort({ created_at: -1 }).limit(5).toArray((err,items) => {
             res.json({
               tasks: tasks,
               activity: items
@@ -345,7 +453,7 @@ if (cluster.isMaster) {
     })
   });
 
-  app.post('/api/task/:id/addArtifact/sign-s3', (req, res) => {
+  app.post('/api/task/:id/addArtifact/:user/sign-s3', (req, res) => {
     res.set('Content-Type', 'application/json');
     const { fileName, fileType } = req.query;
     const s3 = new aws.S3({signatureVersion: 'v4'});
@@ -387,14 +495,15 @@ if (cluster.isMaster) {
         })
         activity.insertOne({
           name: 'Added an artifact to task',
+          owner: req.params.user,
           content: newArtifact.url,
           task_id: ObjectId(req.params.id),
           created_at: new Date()
         })
 
-        tasks.find().sort({ updated: -1 }).toArray(function(err, tasks) {
+        tasks.find({ owner: ObjectID(req.params.user) }).sort({ updated: -1 }).toArray(function(err, tasks) {
           if(err) { reject(err) } else {
-            activity.find().sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+            activity.find({ owner: req.params.user }).sort({ created_at: -1 }).limit(5).toArray((err,items) => {
               res.json({
                 tasks: tasks,
                 signedUrl: returnData.signedRequest,
@@ -429,14 +538,15 @@ if (cluster.isMaster) {
       })
       activity.insertOne({
         name: 'Added an attachment to task',
+        owner: req.body.user,
         content: req.body.name,
         task_id: ObjectId(req.params.id),
         created_at: new Date()
       })
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, tasks) {
+      tasks.find({ owner: ObjectId(req.body.user) }).sort({ updated: -1 }).toArray(function(err, tasks) {
         if(err) { reject(err) } else {
-          activity.find().sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+          activity.find({ owner: req.body.user }).sort({ created_at: -1 }).limit(5).toArray((err,items) => {
             res.json({
               tasks: tasks,
               activity: items
@@ -447,7 +557,7 @@ if (cluster.isMaster) {
     })
   });
 
-  app.post('/api/task/:id/removeAttachment', function (req, res) {
+  app.post('/api/task/:id/removeAttachment/:user', function (req, res) {
     res.set('Content-Type', 'application/json');
     // connect to Mongo
     MongoClient.connect(mongoURL, { useNewUrlParser: true }, function(err, client) {
@@ -465,7 +575,7 @@ if (cluster.isMaster) {
         $set: { updated: new Date() }
       })
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+      tasks.find({ owner: ObjectId(req.params.user) }).sort({ updated: -1 }).toArray(function(err, items) {
         if(err) { reject(err) } else {
           res.json(items);
         }
@@ -498,14 +608,15 @@ if (cluster.isMaster) {
       })
       activity.insertOne({
         name: 'Added a note to task',
+        owner: req.body.user,
         content: req.body.name,
         task_id: ObjectId(req.params.id),
         created_at: new Date()
       })
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, tasks) {
+      tasks.find({ owner: ObjectId(req.body.user) }).sort({ updated: -1 }).toArray(function(err, tasks) {
         if(err) { reject(err) } else {
-          activity.find().sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+          activity.find({ owner: req.body.user }).sort({ created_at: -1 }).limit(5).toArray((err,items) => {
             res.json({
               tasks: tasks,
               activity: items
@@ -535,14 +646,15 @@ if (cluster.isMaster) {
       })
       activity.insertOne({
         name: 'Task: Started',
+        owner: req.body.user,
         content: req.body.name,
         task_id: ObjectId(req.params.id),
         created_at: new Date()
       })
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, tasks) {
+      tasks.find({ owner: ObjectId(req.body.user) }).sort({ updated: -1 }).toArray(function(err, tasks) {
         if(err) { reject(err) } else {
-          activity.find().sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+          activity.find({ owner: req.body.user }).sort({ created_at: -1 }).limit(5).toArray((err,items) => {
             res.json({
               tasks: tasks,
               activity: items
@@ -572,14 +684,15 @@ if (cluster.isMaster) {
       })
       activity.insertOne({
         name: 'Task: Completed',
+        owner: req.body.user,
         content: req.body.name,
         task_id: ObjectId(req.params.id),
         created_at: new Date()
       })
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, tasks) {
+      tasks.find({ owner: ObjectId(req.body.user) }).sort({ updated: -1 }).toArray(function(err, tasks) {
         if(err) { reject(err) } else {
-          activity.find().sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+          activity.find({ owner: req.body.user }).sort({ created_at: -1 }).limit(5).toArray((err,items) => {
             res.json({
               tasks: tasks,
               activity: items
@@ -609,14 +722,15 @@ if (cluster.isMaster) {
       })
       activity.insertOne({
         name: 'Task: Overdue',
+        owner: req.body.user,
         content: req.body.name,
         task_id: ObjectId(req.params.id),
         created_at: new Date()
       })
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, tasks) {
+      tasks.find({ owner: ObjectId(req.body.user) }).sort({ updated: -1 }).toArray(function(err, tasks) {
         if(err) { reject(err) } else {
-          activity.find().sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+          activity.find({ owner: req.body.user }).sort({ created_at: -1 }).limit(5).toArray((err,items) => {
             res.json({
               tasks: tasks,
               activity: items
@@ -627,7 +741,7 @@ if (cluster.isMaster) {
     })
   });
 
-  app.post('/api/task/:id/cancelled', function (req, res) {
+  app.post('/api/task/:id/cancelled/:user', function (req, res) {
     res.set('Content-Type', 'application/json');
     // connect to Mongo
     MongoClient.connect(mongoURL, { useNewUrlParser: true }, function(err, client) {
@@ -644,7 +758,7 @@ if (cluster.isMaster) {
         $set: { status: 'Cancelled', cancelled_date: new Date(), updated: new Date() }
       })
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+      tasks.find({ owner: ObjectId(req.params.user) }).sort({ updated: -1 }).toArray(function(err, items) {
         if(err) { reject(err) } else {
           res.json(items);
         }
@@ -652,7 +766,7 @@ if (cluster.isMaster) {
     })
   });
 
-  app.post('/api/task/:id/archive', function (req, res) {
+  app.post('/api/task/:id/archive/:user', function (req, res) {
     res.set('Content-Type', 'application/json');
     // connect to Mongo
     MongoClient.connect(mongoURL, { useNewUrlParser: true }, function(err, client) {
@@ -666,7 +780,7 @@ if (cluster.isMaster) {
 
       tasks.deleteOne( { _id : ObjectId(req.params.id) } )
 
-      tasks.find().sort({ updated: -1 }).toArray(function(err, items) {
+      tasks.find({ owner: ObjectId(req.params.user) }).sort({ updated: -1 }).toArray(function(err, items) {
         if(err) { reject(err) } else {
           res.json(items);
         }

@@ -9,6 +9,13 @@ h2 {
   font-weight: 700 !important
 }
 
+.login-form-field label {
+  color: white !important;
+}
+.login-form-field p {
+  color: #90999F !important;
+}
+
 .pill {
   font-size: 10px;
   font-weight: bold;

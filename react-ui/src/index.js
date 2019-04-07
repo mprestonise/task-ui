@@ -1,16 +1,20 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import { BrowserRouter as Router, Route } from "react-router-dom";
-import Admin from './Admin';
-import TaskView from './TaskView';
-import Welcome from './Welcome';
-import './index.css';
+import React from 'react'
+import ReactDOM from 'react-dom'
+import { CookiesProvider } from 'react-cookie'
+import { BrowserRouter as Router, Route } from "react-router-dom"
+import RestrictedContainer from './RestrictedContainer'
+import TaskView from './TaskView'
+import Welcome from './Welcome'
+import './index.css'
 
 ReactDOM.render(
-  <Router>
-    <Route exact path="/" component={Welcome} />
-    <Route path="/task/:id" render={props => <TaskView {...props} />} />
-    <Route exact path="/admin" component={Admin} />
-  </Router>,
+  <CookiesProvider>
+    <Router>
+      <Route exact path="/" component={Welcome} />
+      <Route path="/task/:id" render={props => <TaskView {...props} />} />
+      <Route exact path="/admin" render={(props) => <RestrictedContainer authorize={[1,10]} props={props} />} />
+      <Route path="/not-found" component={Welcome} />
+    </Router>
+  </CookiesProvider>,
   document.getElementById('root')
 );
