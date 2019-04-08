@@ -501,7 +501,7 @@ if (cluster.isMaster) {
           created_at: new Date()
         })
 
-        tasks.find({ owner: ObjectID(req.params.user) }).sort({ updated: -1 }).toArray(function(err, tasks) {
+        tasks.find({ owner: ObjectId(req.params.user) }).sort({ updated: -1 }).toArray(function(err, tasks) {
           if(err) { reject(err) } else {
             activity.find({ owner: req.params.user }).sort({ created_at: -1 }).limit(5).toArray((err,items) => {
               res.json({

@@ -794,30 +794,36 @@ class Admin extends Component {
         <Pane width={195} padding={24} position="relative" height="100vh" overflow="scroll" background="white" borderLeft="1px solid #373A40" borderRight="1px solid #D0D6DA">
 
           <Pane>
-            <Text className="caps-label">Tasks</Text>
-            <Text display="block" cursor="pointer" onClick={() => this._clearFilter('team')} marginTop={16} size={300} color="#676f76">
-            {this.state.filteredTeam === null
-              ? <Strong size={300} color="#20252A">All teams</Strong>
-              : <span>All teams</span>
-            }
-            </Text>
-            <Text display="block" cursor="pointer" onClick={() => this._filterTeam('Bear team')} marginTop={16} size={300} color="#676f76">
-              {this.state.filteredTeam === 'Bear team'
-                ? <Strong size={300} color="#20252A">Bear team</Strong>
-                : <span>Bear team</span>
+            <Text className="caps-label">Timelines</Text>
+            <Text className="clearfix" display="block" cursor="pointer" onClick={() => this._filterDate('overdue')} marginTop={16} size={300} color="#676f76">
+              {this.state.filteredDate === 'overdue'
+                ? <Strong size={300} color="#20252A">Overdue</Strong>
+                : <span>Overdue</span>
+              }
+              {this.state.overdue > 0
+                ? <span className="pill">{this.state.overdue}</span>
+                : null
               }
             </Text>
-            <Text display="block" cursor="pointer" onClick={() => this._filterTeam('Camel team')} marginTop={16} size={300} color="#676f76">
-            {this.state.filteredTeam === 'Camel team'
-              ? <Strong size={300} color="#20252A">Camel team</Strong>
-              : <span>Camel team</span>
-            }
+            <Text className="clearfix" display="block" cursor="pointer" onClick={() => this._filterDate('today')} marginTop={16} size={300} color="#676f76">
+              {this.state.filteredDate === 'today'
+                ? <Strong size={300} color="#20252A">Due today</Strong>
+                : <span>Due today</span>
+              }
+              {this.state.dueToday > 0
+                ? <span className="pill">{this.state.dueToday}</span>
+                : null
+              }
             </Text>
-            <Text display="block" cursor="pointer" onClick={() => this._filterTeam('Design')} marginTop={16} size={300} color="#676f76">
-            {this.state.filteredTeam === 'Design'
-              ? <Strong size={300} color="#20252A">Design</Strong>
-              : <span>Design</span>
-            }
+            <Text className="clearfix" display="block" cursor="pointer" onClick={() => this._filterDate('week')} marginTop={16} size={300} color="#676f76">
+              {this.state.filteredDate === 'week'
+                ? <Strong size={300} color="#20252A">Due this week</Strong>
+                : <span>Due this week</span>
+              }
+              {this.state.dueThisWeek > 0
+                ? <span className="pill">{this.state.dueThisWeek}</span>
+                : null
+              }
             </Text>
           </Pane>
 
@@ -861,36 +867,30 @@ class Admin extends Component {
           </Pane>
 
           <Pane marginTop={48}>
-            <Text className="caps-label">Timelines</Text>
-            <Text className="clearfix" display="block" cursor="pointer" onClick={() => this._filterDate('overdue')} marginTop={16} size={300} color="#676f76">
-              {this.state.filteredDate === 'overdue'
-                ? <Strong size={300} color="#20252A">Overdue</Strong>
-                : <span>Overdue</span>
-              }
-              {this.state.overdue > 0
-                ? <span className="pill">{this.state.overdue}</span>
-                : null
+            <Text className="caps-label">Tasks</Text>
+            <Text display="block" cursor="pointer" onClick={() => this._clearFilter('team')} marginTop={16} size={300} color="#676f76">
+            {this.state.filteredTeam === null
+              ? <Strong size={300} color="#20252A">All teams</Strong>
+              : <span>All teams</span>
+            }
+            </Text>
+            <Text display="block" cursor="pointer" onClick={() => this._filterTeam('Bear team')} marginTop={16} size={300} color="#676f76">
+              {this.state.filteredTeam === 'Bear team'
+                ? <Strong size={300} color="#20252A">Bear team</Strong>
+                : <span>Bear team</span>
               }
             </Text>
-            <Text className="clearfix" display="block" cursor="pointer" onClick={() => this._filterDate('today')} marginTop={16} size={300} color="#676f76">
-              {this.state.filteredDate === 'today'
-                ? <Strong size={300} color="#20252A">Due today</Strong>
-                : <span>Due today</span>
-              }
-              {this.state.dueToday > 0
-                ? <span className="pill">{this.state.dueToday}</span>
-                : null
-              }
+            <Text display="block" cursor="pointer" onClick={() => this._filterTeam('Camel team')} marginTop={16} size={300} color="#676f76">
+            {this.state.filteredTeam === 'Camel team'
+              ? <Strong size={300} color="#20252A">Camel team</Strong>
+              : <span>Camel team</span>
+            }
             </Text>
-            <Text className="clearfix" display="block" cursor="pointer" onClick={() => this._filterDate('week')} marginTop={16} size={300} color="#676f76">
-              {this.state.filteredDate === 'week'
-                ? <Strong size={300} color="#20252A">Due this week</Strong>
-                : <span>Due this week</span>
-              }
-              {this.state.dueThisWeek > 0
-                ? <span className="pill">{this.state.dueThisWeek}</span>
-                : null
-              }
+            <Text display="block" cursor="pointer" onClick={() => this._filterTeam('Design')} marginTop={16} size={300} color="#676f76">
+            {this.state.filteredTeam === 'Design'
+              ? <Strong size={300} color="#20252A">Design</Strong>
+              : <span>Design</span>
+            }
             </Text>
           </Pane>
 
