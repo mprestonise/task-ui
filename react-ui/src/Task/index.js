@@ -178,6 +178,10 @@ class Task extends Component {
           <Pane marginRight={32}>
             <Progress percent={((completed / total)*100).toFixed(0)} />
           </Pane>
+          <Pane marginRight={32}>
+          <Text display="block" marginBottom={5} className="caps-label">Estimate</Text>
+          <Text color="#676F76">5</Text>
+          </Pane>
         </Pane>
 
 
@@ -231,7 +235,7 @@ class Task extends Component {
             : null
           }
           <Pane display="flex">
-            {this.props.task.artifacts.map((artifact,a) => <Pane key={a} marginRight={8}>
+            {this.props.task.artifacts.map((artifact,a) => <Pane key={a} marginRight={16}>
               <img onClick={() => {this._showArtifact(artifact)}} alt={`Added ${moment(artifact.added).format('DD MMMM YYYY')}`} style={{ borderRadius: '4px', cursor: 'pointer' }} height="64" src={artifact.url} title={moment(artifact.added).format('DD MMMM YYYY')} />
             </Pane>)}
           </Pane>

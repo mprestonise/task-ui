@@ -52,7 +52,7 @@ if (cluster.isMaster) {
   // Answer API requests.
   app.get('/api', function (req, res) {
     res.set('Content-Type', 'application/json');
-    res.send('{"message":"Hello from the custom server!"}');
+    res.json({ message: 'Hello from the TaskUI API' });
   });
 
   app.post('/api/register', function (req, res) {
@@ -216,7 +216,7 @@ if (cluster.isMaster) {
 
       tasks.insertOne({
         name: req.body.name,
-        owner: req.body.user,
+        owner: ObjectId(req.body.user),
         desc: "This task does not have a description",
         team: "Camel team",
         status: "Created",
@@ -359,7 +359,7 @@ if (cluster.isMaster) {
       activity.insertOne({
         name: 'Updated task due date',
         owner: req.body.user,
-        content: req.body.due_date,
+        content: req.body.name,
         task_id: ObjectId(req.params.id),
         created_at: new Date()
       })
@@ -493,13 +493,6 @@ if (cluster.isMaster) {
           $push: { artifacts: { $each: [newArtifact], $position: 0 } },
           $set: { updated: new Date() }
         })
-        activity.insertOne({
-          name: 'Added an artifact to task',
-          owner: req.params.user,
-          content: newArtifact.url,
-          task_id: ObjectId(req.params.id),
-          created_at: new Date()
-        })
 
         tasks.find({ owner: ObjectId(req.params.user) }).sort({ updated: -1 }).toArray(function(err, tasks) {
           if(err) { reject(err) } else {
@@ -515,7 +508,29 @@ if (cluster.isMaster) {
         })
       })
     })
+  });
 
+  app.post('/api/task/:id/artifactAdded', function (req, res) {
+    res.set('Content-Type', 'application/json');
+    // connect to Mongo
+    MongoClient.connect(mongoURL, { useNewUrlParser: true }, function(err, client) {
+
+      // check for errors
+      if (!err) {}
+
+      // get db cursor
+      const db = client.db(dbName)
+      const activity = db.collection('activity')
+
+      activity.insertOne({
+        name: 'Added an artifact to task',
+        owner: req.body.owner,
+        content: req.body.name,
+        task_id: ObjectId(req.params.id),
+        created_at: new Date()
+      })
+      res.json({ status: 200 })
+    })
   });
 
   app.post('/api/task/:id/addAttachment', function (req, res) {
@@ -777,12 +792,72 @@ if (cluster.isMaster) {
       // get db cursor
       const db = client.db(dbName);
       const tasks = db.collection('tasks');
+      const activity = db.collection('activity');
 
       tasks.deleteOne( { _id : ObjectId(req.params.id) } )
+      activity.deleteMany( { owner : req.params.user } )
 
       tasks.find({ owner: ObjectId(req.params.user) }).sort({ updated: -1 }).toArray(function(err, items) {
         if(err) { reject(err) } else {
           res.json(items);
+        }
+      })
+    })
+  });
+
+
+  app.get('/api/data/:user', function (req, res) {
+    res.set('Content-Type', 'application/json');
+    // connect to Mongo
+    MongoClient.connect(mongoURL, { useNewUrlParser: true }, function(err, client) {
+
+      // check for errors
+      if (!err) {}
+
+      // get db cursor
+      const db = client.db(dbName)
+      const tasks = db.collection('tasks')
+
+      tasks.find({ owner: ObjectId(req.params.user) }).sort({ updated: -1 }).toArray(function(err, tasks) {
+        if(err) { reject(err) } else {
+          let doneTasks = tasks
+          let startedTasks = tasks
+          let createdTasks = tasks
+
+          doneTasks = doneTasks.filter(task => task.status === 'Completed')
+          startedTasks = startedTasks.filter(task => task.status === 'Started')
+          createdTasks = createdTasks.filter(task => task.status === 'Created')
+
+          // loop over each task and calculate the time to complete for all completed / cancelled tasks
+          let done = []
+          doneTasks.map(task => {
+            const start = moment(task.started_date)
+            const end = moment(task.completed_date)
+            return done.push({
+              task: task,
+              time: end.diff(start, 'minutes', true)
+            })
+          })
+
+          // loop over all in progress tasks and calculate total time active
+          let started = []
+          startedTasks.map(task => {
+            const start = moment(task.started_date)
+            const end = moment(new Date())
+            return started.push({
+              task: task,
+              time: end.diff(start, 'minutes', true)
+            })
+          })
+
+          // loop over all created tasks and sum the total created (backlog)
+          let created = createdTasks.length
+
+          res.json({
+            done: done,
+            started: started,
+            backlog: created
+          })
         }
       })
     })

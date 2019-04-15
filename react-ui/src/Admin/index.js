@@ -266,7 +266,7 @@ class Admin extends Component {
     fetch(`/api/task/${taskId}/updateDueDate`, {
       method: 'POST',
       headers: { 'Content-Type' : 'application/json' },
-      body: JSON.stringify({ due_date: date, user: JSON.parse(this.props.cookies.cookies.user)._id })
+      body: JSON.stringify({ due_date: date, name: this.state.tasks[taskIndex].name, user: JSON.parse(this.props.cookies.cookies.user)._id })
     })
       .then(response => {
         if (!response.ok) {
@@ -441,28 +441,38 @@ class Admin extends Component {
       method: 'POST',
       body: data
     })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`status ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(json => {
-        this._uploadFile(artifact[0], json.signedUrl, json.url).then(() => {
-          toaster.success('Artifact uploaded successfully', { id: 'updatingTask' })
-          this.setState({
-            allTasks: json.tasks,
-            tasks: json.tasks,
-            activity: json.activity,
-            selectedTask: 0,
-            fetching: false
-          });
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`status ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(json => {
+      this._uploadFile(artifact[0], json.signedUrl, json.url).then(() => {
+        fetch(`/api/task/${taskId}/artifactAdded`,{
+          method: 'POST',
+          headers: { 'Content-Type' : 'application/json' },
+          body: JSON.stringify({ name: this.state.tasks[taskIndex].name, owner: JSON.parse(this.props.cookies.cookies.user)._id })
         })
-      }).catch(e => {
+        .then(response => {
+          if (!response.ok) { throw new Error(`status ${response.status}`); }
+          return response.json();
+        })
+        .then(json => console.log('success') ).catch(e => console.log(e) )
+        toaster.success('Artifact uploaded successfully', { id: 'updatingTask' })
         this.setState({
+          allTasks: json.tasks,
+          tasks: json.tasks,
+          activity: json.activity,
+          selectedTask: 0,
           fetching: false
         });
       })
+    }).catch(e => {
+      this.setState({
+        fetching: false
+      });
+    })
   }
 
   _uploadFile = (file, signedRequest, url) => {
