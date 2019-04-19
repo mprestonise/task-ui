@@ -776,15 +776,26 @@ class Admin extends Component {
           height="100vh"
           position="relative"
           background="#20252A">
-          <Tooltip content="Michael Prestonise" position={Position.RIGHT}>
-          <Avatar
-            src="https://pbs.twimg.com/profile_images/861675088713846784/Eb9nssrg_400x400.jpg"
-            name="Michael Prestonise"
-            size={40}
-            marginTop={16}
-            marginLeft={12}
-          />
-          </Tooltip>
+          {JSON.parse(this.props.cookies.cookies.user)._id === '5ca9c23e4efa72790722e6f0' || JSON.parse(this.props.cookies.cookies.user)._id === '5cb5e41eae99c600278dff51'
+            ? <Tooltip content="Michael Prestonise" position={Position.RIGHT}>
+            <Avatar
+              src="https://pbs.twimg.com/profile_images/861675088713846784/Eb9nssrg_400x400.jpg"
+              name="Michael Prestonise"
+              size={40}
+              marginTop={16}
+              marginLeft={12}
+            />
+            </Tooltip>
+            : <Tooltip content={JSON.parse(this.props.cookies.cookies.user).email} position={Position.RIGHT}>
+            <Avatar
+              isSolid
+              color="blue"
+              name={JSON.parse(this.props.cookies.cookies.user).email}
+              size={40}
+              marginTop={16}
+              marginLeft={12} />
+            </Tooltip>
+          }
           <Tooltip content="Create a new task (Cmd+Alt+1)" position={Position.RIGHT}>
             <Button
               appearance="minimal"
