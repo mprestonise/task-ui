@@ -6,7 +6,7 @@ import update from 'immutability-helper'
 import moment from 'moment'
 import { HotKeys } from 'react-hotkeys'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
-import { Pane, Avatar, Text, Strong, Button, Icon, Tooltip, Position, toaster} from 'evergreen-ui'
+import { Pane, Avatar, Text, Strong, Button, Icon, IconButton, Tooltip, Position, toaster} from 'evergreen-ui'
 import Progress from '../Progress'
 import TaskCard from '../TaskCard'
 import Task from '../Task'
@@ -67,6 +67,11 @@ class Admin extends Component {
     if(prevState.filteredTeam !== this.state.filteredTeam || prevState.filteredStatus !== this.state.filteredStatus || prevState.filteredDate !== this.state.filteredDate){
       this._filterTasks()
     }
+  }
+
+  _logout = () => {
+    this.props.cookies.set('user', 'null', { path: '/' });
+    this.props.history.push('/logout')
   }
 
   _calculateProgress = (tasks) => {
@@ -825,12 +830,25 @@ class Admin extends Component {
           <Icon
             position="absolute"
             left={20}
-            bottom={32}
+            bottom={72}
             icon="help"
             size={24}
             color="#90999F"
           />
           </Tooltip>
+
+          <Tooltip content="Logout" position={Position.RIGHT}>
+            <IconButton
+              position="absolute"
+              left={18}
+              bottom={24}
+              color="#90999F"
+              appearance="minimal"
+              onClick={() => this._logout()}
+              icon="log-out"
+            />
+          </Tooltip>
+
         </Pane>
 
         <Pane width={195} padding={24} position="relative" height="100vh" overflow="scroll" background="white" borderLeft="1px solid #373A40" borderRight="1px solid #D0D6DA">
