@@ -180,14 +180,17 @@ class Task extends Component {
           </Pane>
           <Pane marginRight={32}>
           <Text display="block" marginBottom={5} className="caps-label">Estimate</Text>
-          <Select onChange={e => this.props.changeEstimation(this.props.taskIndex, e.target.value, this.props.task._id)}>
-            <option value="1" selected={this.props.task.estimation === 1}>1</option>
-            <option value="2" selected={this.props.task.estimation === 2}>2</option>
-            <option value="3" selected={this.props.task.estimation === 3}>3</option>
-            <option value="5" selected={this.props.task.estimation === 5}>5</option>
-            <option value="8" selected={this.props.task.estimation === 8}>8</option>
-            <option value="13" selected={this.props.task.estimation === 13}>13</option>
-          </Select>
+          {this.props.task.status === 'Completed' || this.props.task.status === 'Cancelled'
+            ? <Text color="#676F76">{this.props.task.estimation}</Text>
+            : <Select onChange={e => this.props.changeEstimation(this.props.taskIndex, e.target.value, this.props.task._id)}>
+              <option value="1" selected={this.props.task.estimation === 1}>1</option>
+              <option value="2" selected={this.props.task.estimation === 2}>2</option>
+              <option value="3" selected={this.props.task.estimation === 3}>3</option>
+              <option value="5" selected={this.props.task.estimation === 5}>5</option>
+              <option value="8" selected={this.props.task.estimation === 8}>8</option>
+              <option value="13" selected={this.props.task.estimation === 13}>13</option>
+            </Select>
+          }
           </Pane>
         </Pane>
 

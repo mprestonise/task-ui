@@ -142,9 +142,8 @@ class Admin extends Component {
     if(filteredTasks.length > 0 && this.state.filteredTeam){ filteredTasks = filteredTasks.filter(task => task.team === this.state.filteredTeam) }
     if(filteredTasks.length > 0 && this.state.filteredStatus){ filteredTasks = filteredTasks.filter(task => task.status === this.state.filteredStatus) }
     if(filteredTasks.length > 0 && this.state.filteredDate){
-      const today = new Date()
       const sevenDaysAhead = moment(new Date()).add(7, 'days')
-      if(this.state.filteredDate === 'overdue') { filteredTasks = filteredTasks.filter(task => moment(task.due_date).isBefore(today) && task.status !== 'Cancelled' && !task.completed) }
+      if(this.state.filteredDate === 'overdue') { filteredTasks = filteredTasks.filter(task => task.was_overdue && !task.completed && task.status !== 'Cancelled' )}
       if(this.state.filteredDate === 'today') { filteredTasks = filteredTasks.filter(task => moment(task.due_date).isSame(new Date(), 'day') && task.status !== 'Cancelled' && !task.completed) }
       if(this.state.filteredDate === 'week') { filteredTasks = filteredTasks.filter(task => moment(task.due_date).isBetween(new Date(), sevenDaysAhead) && task.status !== 'Cancelled' && !task.completed) }
     }

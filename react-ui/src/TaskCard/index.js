@@ -28,11 +28,14 @@ class TaskCard extends Component {
             background={`${task.was_overdue && !task.completed ? '#EF4D4D' : ''} ${task.completed ? '#47B881' : ''} ${task.status === 'Cancelled' ? '#90999F' : ''} ${!moment(task.due_date).isBefore(new Date()) && task.status === 'Started' && !task.was_overdue ? '#4099FF' : ''} ${task.status === 'Created' && !task.was_overdue ? '#FFD040' : ''}`}
             padding={8}
             height={40}
-            paddingLeft={12}
+            paddingLeft={13}
             paddingRight={12}
             borderRadius={8}
             onClick={() => this.props.selectTask(this.props.taskIndex)}>
-            <Icon icon="clipboard" size={20} color="white" />
+            {task.is_meeting
+              ? <Icon icon="people" marginTop={2} size={20} color="white" />
+              : <Icon icon="clipboard" size={20} color="white" />
+            }
           </Pane>
 
           <Pane
