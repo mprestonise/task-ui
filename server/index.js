@@ -115,6 +115,7 @@ if (cluster.isMaster) {
                   created_at: new Date()
                 })
                 res.json({ status: 200, message: 'User created', user: { _id: insertedUser.insertedId, email: req.body.email, password: hash, role: { label: 'User', level: 1 } } })
+                client.close()
               })
             })
           }
@@ -145,8 +146,10 @@ if (cluster.isMaster) {
             const comparison = bcrypt.compareSync(req.body.password, items[0].password)
             if(comparison){
               res.json({ status: 200, message: 'Email & password match', user: items[0] })
+              client.close()
             } else {
               res.json({ status: 404, message: 'Email & password do not match' })
+              client.close()
             }
           }
         }
@@ -175,6 +178,7 @@ if (cluster.isMaster) {
               tasks: tasks,
               activity: items
             })
+            client.close()
           })
         }
       })
@@ -196,6 +200,7 @@ if (cluster.isMaster) {
       tasks.find({ _id: ObjectId(req.params.id) }).toArray(function(err, items) {
         if(err) { reject(err) } else {
           res.json(items[0]);
+          client.close()
         }
       })
     })
@@ -250,6 +255,7 @@ if (cluster.isMaster) {
               tasks: tasks,
               activity: items
             })
+            client.close()
           })
         }
       })
@@ -294,6 +300,7 @@ if (cluster.isMaster) {
               tasks: tasks,
               activity: items
             })
+            client.close()
           })
         }
       })
@@ -333,6 +340,7 @@ if (cluster.isMaster) {
               tasks: tasks,
               activity: items
             })
+            client.close()
           })
         }
       })
@@ -371,6 +379,7 @@ if (cluster.isMaster) {
               tasks: tasks,
               activity: items
             })
+            client.close()
           })
         }
       })
@@ -409,6 +418,7 @@ if (cluster.isMaster) {
               tasks: tasks,
               activity: items
             })
+            client.close()
           })
         }
       })
@@ -447,6 +457,7 @@ if (cluster.isMaster) {
               tasks: tasks,
               activity: items
             })
+            client.close()
           })
         }
       })
@@ -503,6 +514,7 @@ if (cluster.isMaster) {
                 url: returnData.url,
                 activity: items
               })
+              client.close()
             })
           }
         })
@@ -530,6 +542,7 @@ if (cluster.isMaster) {
         created_at: new Date()
       })
       res.json({ status: 200 })
+      client.close()
     })
   });
 
@@ -566,6 +579,7 @@ if (cluster.isMaster) {
               tasks: tasks,
               activity: items
             })
+            client.close()
           })
         }
       })
@@ -592,7 +606,8 @@ if (cluster.isMaster) {
 
       tasks.find({ owner: ObjectId(req.params.user) }).sort({ updated: -1 }).toArray(function(err, items) {
         if(err) { reject(err) } else {
-          res.json(items);
+          res.json(items)
+          client.close()
         }
       })
     })
@@ -636,6 +651,7 @@ if (cluster.isMaster) {
               tasks: tasks,
               activity: items
             })
+            client.close()
           })
         }
       })
@@ -674,6 +690,7 @@ if (cluster.isMaster) {
               tasks: tasks,
               activity: items
             })
+            client.close()
           })
         }
       })
@@ -712,6 +729,7 @@ if (cluster.isMaster) {
               tasks: tasks,
               activity: items
             })
+            client.close()
           })
         }
       })
@@ -750,6 +768,7 @@ if (cluster.isMaster) {
               tasks: tasks,
               activity: items
             })
+            client.close()
           })
         }
       })
@@ -775,7 +794,8 @@ if (cluster.isMaster) {
 
       tasks.find({ owner: ObjectId(req.params.user) }).sort({ updated: -1 }).toArray(function(err, items) {
         if(err) { reject(err) } else {
-          res.json(items);
+          res.json(items)
+          client.close()
         }
       })
     })
@@ -799,7 +819,8 @@ if (cluster.isMaster) {
 
       tasks.find({ owner: ObjectId(req.params.user) }).sort({ updated: -1 }).toArray(function(err, items) {
         if(err) { reject(err) } else {
-          res.json(items);
+          res.json(items)
+          client.close()
         }
       })
     })
@@ -858,6 +879,7 @@ if (cluster.isMaster) {
             started: started,
             backlog: created
           })
+          client.close()
         }
       })
     })
