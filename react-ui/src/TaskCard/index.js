@@ -77,6 +77,8 @@ class TaskCard extends Component {
                 <option value="Bear team">Bear team</option>
                 <option value="Camel team">Camel team</option>
                 <option value="Design">Design</option>
+                <option value="Product">Product</option>
+                <option value="GAT">GAT</option>
               </Select>
               <Button display="block" marginTop={4} width={106} appearance="minimal" intent="danger" onClick={() => this.props.delete(task._id)}>Delete task</Button>
             </Pane>
