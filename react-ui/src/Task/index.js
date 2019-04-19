@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import moment from 'moment'
-import { Avatar, Pane, Heading, Text, TextInput, Textarea, FilePicker, Strong, IconButton, Button, Tooltip, Position } from 'evergreen-ui'
+import { Avatar, Pane, Heading, Text, TextInput, Textarea, FilePicker, Select, Strong, IconButton, Button, Tooltip, Position } from 'evergreen-ui'
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import Progress from '../Progress'
@@ -133,7 +133,7 @@ class Task extends Component {
               disabled={this.props.task.completed || this.props.task.status === 'Cancelled'}
               calendarClassName="due-date-calendar"
               selected={moment( this.props.task.due_date ).toDate()}
-              onChange={date => this.props.changeDueDate(this.props.taskIndex, date, this.props.task._id)}/>
+              onChange={date => this.props.changeDueDate(this.props.taskIndex, moment(date).endOf('day'), this.props.task._id)}/>
           </Pane>
         </Pane>
 
@@ -180,7 +180,14 @@ class Task extends Component {
           </Pane>
           <Pane marginRight={32}>
           <Text display="block" marginBottom={5} className="caps-label">Estimate</Text>
-          <Text color="#676F76">5</Text>
+          <Select onChange={e => this.props.changeEstimation(this.props.taskIndex, e.target.value, this.props.task._id)}>
+            <option value="1" selected={this.props.task.estimation === 1}>1</option>
+            <option value="2" selected={this.props.task.estimation === 2}>2</option>
+            <option value="3" selected={this.props.task.estimation === 3}>3</option>
+            <option value="5" selected={this.props.task.estimation === 5}>5</option>
+            <option value="8" selected={this.props.task.estimation === 8}>8</option>
+            <option value="13" selected={this.props.task.estimation === 13}>13</option>
+          </Select>
           </Pane>
         </Pane>
 

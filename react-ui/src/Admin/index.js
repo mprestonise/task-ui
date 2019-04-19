@@ -356,6 +356,38 @@ class Admin extends Component {
       })
   }
 
+  _changeEstimation = (taskIndex, estimation, taskId) => {
+    toaster.notify('Updating estimation..', { id: 'updatingTask' })
+    this.setState({
+      tasks: update(this.state.tasks, { [taskIndex]: { estimation: { $set: estimation } } })
+    })
+    fetch(`/api/task/${taskId}/updateEstimation`, {
+      method: 'POST',
+      headers: { 'Content-Type' : 'application/json' },
+      body: JSON.stringify({ estimation: estimation, name: this.state.tasks[taskIndex].name, user: JSON.parse(this.props.cookies.cookies.user)._id })
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`status ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(json => {
+        toaster.success(`Estimation updated to ${estimation}`, { id: 'updatingTask' })
+        this.setState({
+          allTasks: json.tasks,
+          tasks: json.tasks,
+          activity: json.activity,
+          selectedTask: 0,
+          fetching: false
+        });
+      }).catch(e => {
+        this.setState({
+          fetching: false
+        });
+      })
+  }
+
   _newSubtask = (taskIndex) => {
     const newSubtask = {
       completed: false,
@@ -984,6 +1016,7 @@ class Admin extends Component {
               toggleSubtask={this._toggleSubtask}
               changeName={this._changeName}
               changeDesc={this._changeDesc}
+              changeEstimation={this._changeEstimation}
               selectTeam={this._selectTeam}
               changeDueDate={this._changeDueDate}
               newSubtask={this._newSubtask}

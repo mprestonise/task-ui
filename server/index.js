@@ -227,11 +227,12 @@ if (cluster.isMaster) {
         status: "Created",
         created_date: new Date(),
         started_date: null,
+        estimation: 2,
         completed: false,
         completed_date: null,
         cancelled_date: null,
         was_overdue: false,
-        due_date: moment( new Date() ).add(8, 'days').toDate(),
+        due_date: moment( new Date() ).endOf('day').add(8, 'days').toDate(),
         updated: new Date(),
         subtasks: [],
         artifacts: [],
@@ -327,6 +328,46 @@ if (cluster.isMaster) {
 
       activity.insertOne({
         name: 'Updated task description',
+        owner: req.body.user,
+        content: req.body.name,
+        task_id: ObjectId(req.params.id),
+        created_at: new Date()
+      })
+
+      tasks.find({ owner: ObjectId(req.body.user) }).sort({ updated: -1 }).toArray(function(err, tasks) {
+        if(err) { reject(err) } else {
+          activity.find({ owner: req.body.user }).sort({ created_at: -1 }).limit(5).toArray((err,items) => {
+            res.json({
+              tasks: tasks,
+              activity: items
+            })
+            client.close()
+          })
+        }
+      })
+    })
+  });
+
+  app.post('/api/task/:id/updateEstimation', function (req, res) {
+    res.set('Content-Type', 'application/json');
+    // connect to Mongo
+    MongoClient.connect(mongoURL, { useNewUrlParser: true }, function(err, client) {
+
+      // check for errors
+      if (!err) {}
+
+      // get db cursor
+      const db = client.db(dbName)
+      const tasks = db.collection('tasks')
+      const activity = db.collection('activity')
+
+      tasks.findOneAndUpdate( { _id : ObjectId(req.params.id) },
+      {
+        $set: { estimation: req.body.estimation, updated: new Date() }
+      })
+
+      activity.insertOne({
+        name: 'Updated task estimation',
         owner: req.body.user,
         content: req.body.name,
         task_id: ObjectId(req.params.id),
