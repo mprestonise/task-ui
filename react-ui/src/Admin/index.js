@@ -74,6 +74,10 @@ class Admin extends Component {
     this.props.history.push('/logout')
   }
 
+  _analytics = () => {
+    this.props.history.push('/analytics')
+  }
+
   _calculateProgress = (tasks) => {
     let totalCompleted = 0,
         totalSubtasks = 0
@@ -793,7 +797,8 @@ class Admin extends Component {
               name={JSON.parse(this.props.cookies.cookies.user).email}
               size={40}
               marginTop={16}
-              marginLeft={12} />
+              marginLeft={12}
+            />
             </Tooltip>
           }
           <Tooltip content="Create a new task (Cmd+Alt+1)" position={Position.RIGHT}>
@@ -826,6 +831,22 @@ class Admin extends Component {
           appearance="card"
           position={Position.RIGHT}>
             <Icon size={20} marginLeft={23} marginTop={16} color="rgba(16,112,202,1)" icon="history" />
+          </Tooltip>
+
+          <Tooltip content="Analytics" position={Position.RIGHT}>
+            <Button
+              appearance="minimal"
+              intent="none"
+              className="new-task-btn"
+              width={40}
+              height={40}
+              padding={0}
+              marginTop={16}
+              marginLeft={12}
+              background="transparent"
+              onClick={() => this._analytics()}>
+              <Icon size={24} marginLeft={8} icon="timeline-bar-chart" />
+            </Button>
           </Tooltip>
 
           <Tooltip content={

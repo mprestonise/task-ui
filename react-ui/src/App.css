@@ -26,6 +26,28 @@ h2 {
   float: right;
 }
 
+#chart-wrapper {
+  margin-left: -24px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 8px;
+  margin-right: 8px;
+  display: inline-block;
+  background: rgba(144,153,159,1);
+}
+.dot.started { background: #4099FF !important }
+.dot.overdue { background: rgba(239,77,77,1) !important }
+.dot.completed { background: rgba(71,184,129,1) !important }
+.dot.created { background: #FFD040 !important }
+
+.analytics-label {
+  display: inline-flex;
+  align-items: center;
+}
+
 .sidebar-progress {
   margin-top: 24px;
 }

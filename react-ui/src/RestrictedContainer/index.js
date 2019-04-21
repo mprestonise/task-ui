@@ -3,6 +3,7 @@ import { withRouter, Redirect } from 'react-router-dom'
 import { instanceOf } from 'prop-types'
 import { withCookies, Cookies } from 'react-cookie'
 import Admin from '../Admin'
+import Analytics from '../Analytics'
 
 class RestrictedContainer extends Component {
 
@@ -24,7 +25,11 @@ class RestrictedContainer extends Component {
     if(this.userRole === this.props.authorize[0] || this.userRole === this.props.authorize[1]){
       authenticated = true
     }
-    return authenticated ? <Admin /> : <Redirect to="/" />;
+    if(this.props.match.path === '/analytics'){
+      return authenticated ? <Analytics /> : <Redirect to="/" />;
+    } else {
+      return authenticated ? <Admin /> : <Redirect to="/" />;
+    }
   }
 }
 

@@ -13,6 +13,7 @@ ReactDOM.render(
       <Route exact path="/" component={Welcome} />
       <Route path="/task/:id" render={props => <TaskView {...props} />} />
       <Route exact path="/admin" render={(props) => <RestrictedContainer authorize={[1,10]} props={props} />} />
+      <Route exact path="/analytics" render={(props) => <RestrictedContainer authorize={[1,10]} props={props} />} />
       <Route exact path="/logout" component={Welcome} />
       <Route path="/not-found" component={Welcome} />
     </Router>
